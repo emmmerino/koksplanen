@@ -470,9 +470,11 @@ function editWish(w){
     $("#wCancel").addEventListener("click", closeSheet);
     $("#wForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const name = cap($("#wName").value); if (!name) return;
+      // Läs fälten innan arket stängs, annars finns de inte längre.
+      const upd = { name: cap($("#wName").value), note: $("#wNote").value.trim(), price: toPrice($("#wPrice").value), who };
+      if (!upd.name) return;
       closeSheet();
-      await db.doc("wishes/" + w.id).update({ name, note: $("#wNote").value.trim(), price: toPrice($("#wPrice").value), who }).catch(showErr);
+      await db.doc("wishes/" + w.id).update(upd).catch(showErr);
     });
   });
 }
