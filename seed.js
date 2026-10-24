@@ -1,4 +1,5 @@
 // Starträtter som kan läggas in med en knapp när databasen är tom.
+// cost = ungefärlig kostnad i kronor för hela rätten (cirka 4 portioner).
 export const SEED_DISHES = [
  {
   "id": "chili-con-carne",
@@ -36,7 +37,8 @@ export const SEED_DISHES = [
     "n": "Crème fraiche",
     "m": "2 dl"
    }
-  ]
+  ],
+  "cost": 120
  },
  {
   "id": "falukorv-stroganoff",
@@ -70,7 +72,8 @@ export const SEED_DISHES = [
     "n": "Tomatpuré",
     "m": "2 msk"
    }
-  ]
+  ],
+  "cost": 90
  },
  {
   "id": "fiskpinnar",
@@ -96,7 +99,8 @@ export const SEED_DISHES = [
     "n": "Citron",
     "m": "1 st"
    }
-  ]
+  ],
+  "cost": 100
  },
  {
   "id": "flaskfile",
@@ -122,7 +126,8 @@ export const SEED_DISHES = [
     "n": "Olivolja",
     "m": ""
    }
-  ]
+  ],
+  "cost": 170
  },
  {
   "id": "halloumi-curry",
@@ -156,7 +161,8 @@ export const SEED_DISHES = [
     "n": "Ris",
     "m": "4 port"
    }
-  ]
+  ],
+  "cost": 130
  },
  {
   "id": "hamburgare",
@@ -194,7 +200,8 @@ export const SEED_DISHES = [
     "n": "Hamburgerdressing",
     "m": ""
    }
-  ]
+  ],
+  "cost": 170
  },
  {
   "id": "kottbullar-mos",
@@ -216,7 +223,8 @@ export const SEED_DISHES = [
     "n": "Lingonsylt",
     "m": ""
    }
-  ]
+  ],
+  "cost": 120
  },
  {
   "id": "kyckling-ugn",
@@ -250,7 +258,8 @@ export const SEED_DISHES = [
     "n": "Tzatziki",
     "m": "2 dl"
    }
-  ]
+  ],
+  "cost": 130
  },
  {
   "id": "kycklinggryta",
@@ -284,7 +293,8 @@ export const SEED_DISHES = [
     "n": "Curry",
     "m": "1 msk"
    }
-  ]
+  ],
+  "cost": 150
  },
  {
   "id": "lasagne",
@@ -326,7 +336,8 @@ export const SEED_DISHES = [
     "n": "Riven ost",
     "m": "150 g"
    }
-  ]
+  ],
+  "cost": 140
  },
  {
   "id": "pannkakor",
@@ -356,7 +367,8 @@ export const SEED_DISHES = [
     "n": "Bacon",
     "m": "1 paket"
    }
-  ]
+  ],
+  "cost": 70
  },
  {
   "id": "pasta-carbonara",
@@ -382,7 +394,8 @@ export const SEED_DISHES = [
     "n": "Svartpeppar",
     "m": ""
    }
-  ]
+  ],
+  "cost": 100
  },
  {
   "id": "pizza",
@@ -412,7 +425,8 @@ export const SEED_DISHES = [
     "n": "Oregano",
     "m": ""
    }
-  ]
+  ],
+  "cost": 130
  },
  {
   "id": "pyttipanna",
@@ -434,7 +448,8 @@ export const SEED_DISHES = [
     "n": "Smör",
     "m": ""
    }
-  ]
+  ],
+  "cost": 80
  },
  {
   "id": "soppa-potatis-purjo",
@@ -460,7 +475,8 @@ export const SEED_DISHES = [
     "n": "Bröd",
     "m": ""
    }
-  ]
+  ],
+  "cost": 80
  },
  {
   "id": "spaghetti-kottfarssas",
@@ -506,7 +522,8 @@ export const SEED_DISHES = [
     "n": "Peppar",
     "m": ""
    }
-  ]
+  ],
+  "cost": 110
  },
  {
   "id": "tacos",
@@ -552,7 +569,8 @@ export const SEED_DISHES = [
     "n": "Riven ost",
     "m": ""
    }
-  ]
+  ],
+  "cost": 150
  },
  {
   "id": "ugnslax",
@@ -586,7 +604,8 @@ export const SEED_DISHES = [
     "n": "Salt",
     "m": ""
    }
-  ]
+  ],
+  "cost": 190
  },
  {
   "id": "wok",
@@ -620,6 +639,7 @@ export const SEED_DISHES = [
     "n": "Sweet chilisås",
     "m": ""
    }
-  ]
+  ],
+  "cost": 140
  }
 ];

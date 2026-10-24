@@ -147,6 +147,13 @@ select.field{flex:0 0 auto;max-width:42%}
 .dish .n{font-weight:600}
 .dish .i{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .count{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.price{flex:0 0 auto;border:0;background:var(--sunk);color:var(--ink);border-radius:8px;padding:5px 9px;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.price.none{background:transparent;color:var(--muted);font-weight:500;border:1px dashed var(--line)}
+.item.done .price{color:var(--done)}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:8px;background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;margin-top:14px}
+.total b{font:700 1.25rem var(--display);font-variant-numeric:tabular-nums}
+.total span{font-size:.85rem;color:var(--muted)}
+.addrow .pricein{flex:0 0 92px;min-width:0}
 
 /* Ark (bottom sheet) */
 .scrim{position:fixed;inset:0;background:rgba(10,16,13,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
@@ -192,10 +199,12 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
   <section id="v-wish" hidden>
     <form class="addrow" id="wishForm" autocomplete="off">
       <input class="field" id="wishName" placeholder="Vad behöver köpas?" aria-label="Sak att köpa" enterkeyhint="done">
+      <input class="field pricein" id="wishPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="Kr" aria-label="Ungefärligt pris i kronor">
       <button class="btn" type="submit">Lägg till</button>
     </form>
     <div class="who-pick" id="wishWho" role="group" aria-label="Vem är det till"></div>
     <div class="who-pick" id="wishFilter" role="group" aria-label="Visa"></div>
+    <div class="total" id="wishTotal" hidden></div>
     <div id="wishList"></div>
   </section>
 
@@ -211,6 +220,7 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
       <button class="btn ghost small" id="allRester">Rester till alla luncher</button>
     </div>
     <div class="list" id="days"></div>
+    <div class="total" id="weekCost" hidden></div>
     <div class="panel">
       <div class="head">
         <div><h2>Att handla till menyn</h2><div class="sub" id="ingSub"></div></div>
@@ -253,6 +263,11 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm = s => String(s || "").trim().toLowerCase();
 const cap = s => { s = String(s || "").trim(); return s ? s[0].toUpperCase() + s.slice(1) : s; };
+const kr = n => Math.round(n).toLocaleString("sv-SE") + " kr";
+const toPrice = v => { const n = Math.round(Number(String(v ?? "").replace(/\s/g, "").replace(",", "."))); return Number.isFinite(n) && n > 0 ? n : null; };
+const SEED_COST = Object.fromEntries(SEED_DISHES.map(d => [d.id, d.cost]));
+// Pris för en rätt: det ni själva angett, annars uppskattningen för starträtten.
+const dishCost = d => d ? (typeof d.cost === "number" ? d.cost : (d.cost === null ? null : SEED_COST[d.id] ?? null)) : null;
 
 /* ---------- Kategorier ---------- */
 const CATS = [
@@ -414,8 +429,9 @@ $("#wishForm").addEventListener("submit", async e => {
   e.preventDefault();
   const raw = $("#wishName").value.trim(); if (!raw || !db) return;
   const [name, ...rest] = raw.split(",");
-  $("#wishName").value = "";
-  await db.collection("wishes").add({ name: cap(name), note: rest.join(",").trim(), who: S.wishWho, done: false,
+  const price = toPrice($("#wishPrice").value);
+  $("#wishName").value = ""; $("#wishPrice").value = "";
+  await db.collection("wishes").add({ name: cap(name), note: rest.join(",").trim(), who: S.wishWho, price, done: false,
     createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName }).catch(showErr);
   $("#wishName").focus();
 });
@@ -428,6 +444,7 @@ $("#wishList").addEventListener("click", async e => {
   const row = e.target.closest("[data-id]"); if (!row) return;
   const w = S.wishes.find(x => x.id === row.dataset.id); if (!w) return;
   if (e.target.closest(".x")) db.doc("wishes/" + w.id).delete().catch(showErr);
+  else if (e.target.closest(".price")) editWish(w);
   else if (e.target.closest(".tick, .txt")) db.doc("wishes/" + w.id).update({ done: !w.done, doneAt: !w.done ? Date.now() : null }).catch(showErr);
 });
 function wishRow(w){
@@ -435,7 +452,29 @@ function wishRow(w){
   return `<div class="item${w.done ? " done" : ""}" data-id="${esc(w.id)}">
     <button class="tick" aria-label="${w.done ? "Markera som ej köpt" : "Markera som köpt"}: ${esc(w.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     <div class="txt"><div class="name">${esc(w.name)}</div>${meta ? `<div class="meta">${esc(meta)}</div>` : ""}</div>
+    <button class="price${w.price ? "" : " none"}" type="button" aria-label="Ändra ${esc(w.name)}">${w.price ? "≈ " + kr(w.price) : "+ pris"}</button>
     <button class="x" aria-label="Ta bort ${esc(w.name)}">×</button></div>`;
+}
+const sumPrice = ws => ws.reduce((a, w) => a + (w.price || 0), 0);
+function editWish(w){
+  openSheet(`<h2>Ändra</h2>
+    <form class="stack" id="wForm">
+      <div><label class="l" for="wName">Vad</label><input class="field" style="width:100%" id="wName" value="${esc(w.name)}" required></div>
+      <div><label class="l" for="wNote">Anteckning</label><input class="field" style="width:100%" id="wNote" value="${esc(w.note || "")}" placeholder="t.ex. storlek 38"></div>
+      <div><label class="l" for="wPrice">Ungefärligt pris (kr)</label><input class="field" style="width:100%" id="wPrice" type="number" inputmode="numeric" min="0" step="1" value="${w.price || ""}" placeholder="t.ex. 800"></div>
+      <div><span class="l">Till</span><div class="who-pick" id="wWho" style="margin-top:0">${PEOPLE.map(([k,n]) => `<button type="button" data-who="${k}" aria-pressed="${(w.who || "hemmet") === k}">${n}</button>`).join("")}</div></div>
+      <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost" id="wCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
+    </form>`, () => {
+    let who = PERSON[w.who] ? w.who : "hemmet";
+    $("#wWho").addEventListener("click", e => { const b = e.target.closest("[data-who]"); if (!b) return; who = b.dataset.who; for (const x of $("#wWho").children) x.setAttribute("aria-pressed", String(x.dataset.who === who)); });
+    $("#wCancel").addEventListener("click", closeSheet);
+    $("#wForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = cap($("#wName").value); if (!name) return;
+      closeSheet();
+      await db.doc("wishes/" + w.id).update({ name, note: $("#wNote").value.trim(), price: toPrice($("#wPrice").value), who }).catch(showErr);
+    });
+  });
 }
 function renderWish(){
   drawWishPickers();
@@ -448,10 +487,14 @@ function renderWish(){
   for (const [k, label] of PEOPLE){
     const g = open.filter(w => (PERSON[w.who] ? w.who : "hemmet") === k);
     if (!g.length) continue;
-    html += `<div class="group"><h3><span>${label}</span><span>${g.length}</span></h3><div class="list">${g.map(wishRow).join("")}</div></div>`;
+    const sum = sumPrice(g);
+    html += `<div class="group"><h3><span>${label}</span><span>${g.length} st${sum ? " · ≈ " + kr(sum) : ""}</span></h3><div class="list">${g.map(wishRow).join("")}</div></div>`;
   }
   if (done.length) html += `<div class="group"><h3><span>Köpt</span><button class="btn ghost small" id="clearWishDone" type="button">Rensa köpta (${done.length})</button></h3><div class="list">${done.slice(0,40).map(wishRow).join("")}</div></div>`;
   $("#wishList").innerHTML = html;
+  const total = sumPrice(open), missing = open.filter(w => !w.price).length;
+  $("#wishTotal").hidden = !open.length;
+  $("#wishTotal").innerHTML = `<span>Kvar att köpa${S.wishFilter ? " för " + PERSON[S.wishFilter] : ""}${missing ? ` · ${missing} utan pris` : ""}</span><b>≈ ${kr(total)}</b>`;
 }
 
 /* ---------- Veckomeny ---------- */
@@ -489,6 +532,7 @@ function renderPlan(){
           <button class="slot${dn ? " set" : ""}" data-w="dinner">${dn ? esc(dn) : "Välj middag"}</button></div>
       </div></div>`;
   }).join("");
+  renderWeekCost(ds);
   renderIngredients();
 }
 
@@ -518,6 +562,20 @@ $("#fillRandom").addEventListener("click", async () => {
   }
   toast(n ? `Fyllde ${n} middagar. Tryck på en för att byta.` : "Alla middagar är redan valda");
 });
+
+function renderWeekCost(ds){
+  let sum = 0, n = 0, missing = 0;
+  for (const d of ds){
+    const day = S.days[keyOf(d)] || {};
+    for (const m of [day.dinner, day.lunch]){
+      if (!m || !m.dishId) continue;
+      const c = dishCost(dishById(m.dishId)); n++;
+      if (c) sum += c; else missing++;
+    }
+  }
+  const el = $("#weekCost"); el.hidden = !n;
+  el.innerHTML = `<span>Uppskattad matkostnad för ${n} ${n === 1 ? "måltid" : "måltider"}${missing ? ` · ${missing} utan pris` : ""}</span><b>≈ ${kr(sum)}</b>`;
+}
 
 /* Ingredienser för veckan */
 function weekIngredients(){
@@ -605,7 +663,7 @@ function openPicker(k, which){
     const draw = () => {
       const q = norm($("#pkSearch").value);
       const ds = S.dishes.filter(x => !q || norm(x.name).includes(q) || (x.ingredients||[]).some(i => norm(i.n).includes(q)));
-      $("#pkList").innerHTML = ds.length ? ds.map(x => `<div class="dish" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div></div></div>`).join("")
+      $("#pkList").innerHTML = ds.length ? ds.map(x => `<div class="dish" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`).join("")
         : `<div class="dish" style="cursor:default"><div class="t sub">Ingen rätt matchar. Tryck på "Använd det jag skrev" eller skapa rätten under Rätter.</div></div>`;
     };
     draw();
@@ -635,7 +693,7 @@ function renderDishes(){
     $("#dishList").innerHTML = `<div class="empty"><strong>Inga rätter än</strong>Tryck på "Ny rätt" och skriv in en rätt ni brukar laga, med ingredienserna rad för rad.<div style="margin-top:12px"><button class="btn" data-seed="1" type="button">Lägg in ${SEED_DISHES.length} starträtter</button></div></div>`; return;
   }
   $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span></div>` +
-    (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", ")) || "Inga ingredienser"}</div></div><span class="count">${(x.ingredients||[]).length}</span></div>`).join("") + `</div>`
+    (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", ")) || "Inga ingredienser"}</div></div><span class="price${dishCost(x) ? "" : " none"}">${dishCost(x) ? "≈ " + kr(dishCost(x)) : "inget pris"}</span></div>`).join("") + `</div>`
       : `<div class="empty">Ingen rätt matchar "${esc(S.search)}".</div>`);
 }
 $("#dishSearch").addEventListener("input", e => { S.search = e.target.value; renderDishes(); });
@@ -645,7 +703,7 @@ $("#dishList").addEventListener("click", async e => {
   if (sb){
     sb.disabled = true;
     const b = writeBatch(fsRef);
-    for (const d of SEED_DISHES) b.set(doc(fsRef, "dishes", d.id), { name: d.name, ingredients: d.ingredients, builtin: true, updatedAt: Date.now() });
+    for (const d of SEED_DISHES) b.set(doc(fsRef, "dishes", d.id), { name: d.name, ingredients: d.ingredients, cost: d.cost, builtin: true, updatedAt: Date.now() });
     try { await b.commit(); toast("Starträtterna är inlagda"); } catch(err){ showErr(err); sb.disabled = false; }
     return;
   }
@@ -660,6 +718,8 @@ function editDish(id){
       <div><label class="l" for="dIng">Ingredienser, en per rad</label>
         <textarea class="field" id="dIng" placeholder="Kycklingfilé, 600 g&#10;Ris, 4 port&#10;Gul lök&#10;Matlagningsgrädde, 2 dl">${esc(d ? ingToText(d.ingredients) : "")}</textarea>
         <div class="hint">Skriv mängden efter ett kommatecken om ni vill, t.ex. "Köttfärs, 500 g".</div></div>
+      <div><label class="l" for="dCost">Ungefärlig kostnad för hela rätten (kr)</label><input class="field" style="width:100%" id="dCost" type="number" inputmode="numeric" min="0" step="1" value="${dishCost(d) || ""}" placeholder="t.ex. 120">
+        <div class="hint">Ungefär vad ingredienserna kostar för en middag till familjen.</div></div>
       <div class="spread">
         ${d ? `<button type="button" class="btn danger small" id="dDel">Ta bort rätten</button>` : "<span></span>"}
         <div class="row"><button type="button" class="btn ghost" id="dCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
@@ -669,7 +729,7 @@ function editDish(id){
     $("#dCancel").addEventListener("click", closeSheet);
     $("#dishForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
+      const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), cost: toPrice($("#dCost").value), builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
       if (!body.name) return;
       closeSheet();
       try { if (d) await db.doc("dishes/" + d.id).set(body); else await db.collection("dishes").add(body); toast("Rätten är sparad"); }
