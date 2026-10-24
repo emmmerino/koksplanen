@@ -60,9 +60,15 @@ h2{font:700 1.25rem/1.15 var(--display);margin:0;text-wrap:balance}
 /* Bottenflikar */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
-nav.tabs .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav.tabs .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-weight:600;font-size:.8rem}
 nav.tabs button svg{width:24px;height:24px}
+.who-pick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.who-pick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.9rem;color:var(--ink)}
+.who-pick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#wishFilter button{padding:5px 10px;font-size:.82rem;font-weight:500}
+#wishFilter{gap:4px}
+.who-pick .lbl{align-self:center;font-size:.8rem;color:var(--muted);margin-right:2px}
 nav.tabs button[aria-selected="true"]{color:var(--accent)}
 nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:.7rem;line-height:18px;margin-left:4px}
 
@@ -182,6 +188,17 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
     <div id="shopList"></div>
   </section>
 
+  <!-- STÖRRE KÖP -->
+  <section id="v-wish" hidden>
+    <form class="addrow" id="wishForm" autocomplete="off">
+      <input class="field" id="wishName" placeholder="Vad behöver köpas?" aria-label="Sak att köpa" enterkeyhint="done">
+      <button class="btn" type="submit">Lägg till</button>
+    </form>
+    <div class="who-pick" id="wishWho" role="group" aria-label="Vem är det till"></div>
+    <div class="who-pick" id="wishFilter" role="group" aria-label="Visa"></div>
+    <div id="wishList"></div>
+  </section>
+
   <!-- VECKOMENY -->
   <section id="v-plan" hidden>
     <div class="weeknav">
@@ -217,6 +234,7 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
 <nav class="tabs" role="tablist" hidden>
   <div class="in">
     <button role="tab" data-v="shop" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l-1.5 12.5a1 1 0 0 1-1 .9h-9a1 1 0 0 1-1-.9z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span>Handla<span class="badge" id="shopBadge" hidden></span></span></button>
+    <button role="tab" data-v="wish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8"/><rect x="2.5" y="7" width="19" height="5" rx="1"/><path d="M12 7v13M12 7c-1.5-3-5-3.5-5-1s5 1 5 1zM12 7c1.5-3 5-3.5 5-1s-5 1-5 1z"/></svg><span>Större köp</span></button>
     <button role="tab" data-v="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Veckomeny</span></button>
     <button role="tab" data-v="dish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16a8 8 0 0 1-16 0z"/><path d="M12 9V5M8.5 9.5 7 6M15.5 9.5 17 6"/></svg><span>Rätter</span></button>
   </div>
@@ -279,7 +297,7 @@ const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); retu
 const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 
 /* ---------- Tillstånd ---------- */
-const S = { items: [], dishes: [], days: {}, view: "shop", offset: 0, ingOff: new Set(), ingOn: new Set(), search: "", names: {} };
+const S = { items: [], dishes: [], days: {}, wishes: [], wishWho: "hemmet", wishFilter: "", view: "shop", offset: 0, ingOff: new Set(), ingOn: new Set(), search: "", names: {} };
 let db = null, me = null, myName = "", fsRef = null;
 
 function toast(msg){
@@ -294,11 +312,11 @@ function showErr(e){
 }
 
 /* ---------- Flikar ---------- */
-const TITLES = { shop:"Handla", plan:"Veckomeny", dish:"Rätter" };
+const TITLES = { shop:"Handla", wish:"Större köp", plan:"Veckomeny", dish:"Rätter" };
 function setView(v){
   S.view = v;
   for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.v === v));
-  $("#v-shop").hidden = v !== "shop"; $("#v-plan").hidden = v !== "plan"; $("#v-dish").hidden = v !== "dish";
+  $("#v-shop").hidden = v !== "shop"; $("#v-wish").hidden = v !== "wish"; $("#v-plan").hidden = v !== "plan"; $("#v-dish").hidden = v !== "dish";
   $("#viewTitle").textContent = TITLES[v];
   try { localStorage.setItem("kp-view", v); } catch {}
   render(); window.scrollTo(0,0);
@@ -380,6 +398,60 @@ function renderShop(){
   }
   $("#shopList").innerHTML = html;
   const b = $("#shopBadge"); b.hidden = !open.length; b.textContent = open.length;
+}
+
+/* ---------- Större köp ---------- */
+const PEOPLE = [["emanuel","Emanuel"],["sofia","Sofia"],["leah","Leah"],["hemmet","Hemmet"]];
+const PERSON = Object.fromEntries(PEOPLE);
+try { const w = localStorage.getItem("kp-wishwho"); if (PERSON[w]) S.wishWho = w; } catch {}
+function drawWishPickers(){
+  $("#wishWho").innerHTML = `<span class="lbl">Till:</span>` + PEOPLE.map(([k,n]) => `<button type="button" data-who="${k}" aria-pressed="${S.wishWho === k}">${n}</button>`).join("");
+  $("#wishFilter").innerHTML = `<span class="lbl">Visa:</span>` + [["","Alla"], ...PEOPLE].map(([k,n]) => `<button type="button" data-f="${k}" aria-pressed="${S.wishFilter === k}">${n}</button>`).join("");
+}
+$("#wishWho").addEventListener("click", e => { const b = e.target.closest("[data-who]"); if (!b) return; S.wishWho = b.dataset.who; try { localStorage.setItem("kp-wishwho", S.wishWho); } catch {} drawWishPickers(); });
+$("#wishFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; S.wishFilter = b.dataset.f; renderWish(); });
+$("#wishForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const raw = $("#wishName").value.trim(); if (!raw || !db) return;
+  const [name, ...rest] = raw.split(",");
+  $("#wishName").value = "";
+  await db.collection("wishes").add({ name: cap(name), note: rest.join(",").trim(), who: S.wishWho, done: false,
+    createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName }).catch(showErr);
+  $("#wishName").focus();
+});
+$("#wishList").addEventListener("click", async e => {
+  if (e.target.closest("#clearWishDone")){
+    const done = S.wishes.filter(w => w.done && (!S.wishFilter || w.who === S.wishFilter));
+    for (const w of done){ try { await db.doc("wishes/" + w.id).delete(); } catch(err){ showErr(err); break; } }
+    return toast(`Rensade ${done.length} köpta saker`);
+  }
+  const row = e.target.closest("[data-id]"); if (!row) return;
+  const w = S.wishes.find(x => x.id === row.dataset.id); if (!w) return;
+  if (e.target.closest(".x")) db.doc("wishes/" + w.id).delete().catch(showErr);
+  else if (e.target.closest(".tick, .txt")) db.doc("wishes/" + w.id).update({ done: !w.done, doneAt: !w.done ? Date.now() : null }).catch(showErr);
+});
+function wishRow(w){
+  const meta = [w.note, w.addedByName ? "tillagd av " + w.addedByName : ""].filter(Boolean).join(" · ");
+  return `<div class="item${w.done ? " done" : ""}" data-id="${esc(w.id)}">
+    <button class="tick" aria-label="${w.done ? "Markera som ej köpt" : "Markera som köpt"}: ${esc(w.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <div class="txt"><div class="name">${esc(w.name)}</div>${meta ? `<div class="meta">${esc(meta)}</div>` : ""}</div>
+    <button class="x" aria-label="Ta bort ${esc(w.name)}">×</button></div>`;
+}
+function renderWish(){
+  drawWishPickers();
+  const vis = S.wishes.filter(w => !S.wishFilter || w.who === S.wishFilter);
+  const open = vis.filter(w => !w.done).sort((a,b) => a.createdAt - b.createdAt);
+  const done = vis.filter(w => w.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0));
+  let html = "";
+  if (!open.length && !done.length) html = `<div class="empty"><strong>Inget här än</strong>Välj vem det gäller och skriv in det som behöver köpas, till exempel "Vinterskor, storlek 38".</div>`;
+  else if (!open.length) html = `<div class="empty"><strong>Allt är köpt</strong>Inget kvar på listan just nu.</div>`;
+  for (const [k, label] of PEOPLE){
+    const g = open.filter(w => (PERSON[w.who] ? w.who : "hemmet") === k);
+    if (!g.length) continue;
+    html += `<div class="group"><h3><span>${label}</span><span>${g.length}</span></h3><div class="list">${g.map(wishRow).join("")}</div></div>`;
+  }
+  if (done.length) html += `<div class="group"><h3><span>Köpt</span><button class="btn ghost small" id="clearWishDone" type="button">Rensa köpta (${done.length})</button></h3><div class="list">${done.slice(0,40).map(wishRow).join("")}</div></div>`;
+  $("#wishList").innerHTML = html;
 }
 
 /* ---------- Veckomeny ---------- */
@@ -614,6 +686,7 @@ function editDish(id){
 /* ---------- Render ---------- */
 function render(){
   renderShop();
+  if (S.view === "wish") renderWish();
   if (S.view === "plan") renderPlan();
   if (S.view === "dish") renderDishes();
 }
@@ -666,6 +739,7 @@ if (!FIREBASE_CONFIG){
     };
     unsubs.push(db.collection("items").onSnapshot(s => { S.items = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); ready(); }, onErr));
     unsubs.push(db.collection("dishes").onSnapshot(s => { S.dishes = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name, "sv")); render(); ready(); }, onErr));
+    unsubs.push(db.collection("wishes").onSnapshot(s => { S.wishes = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr));
     unsubs.push(db.collection("days").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.days = o; render(); ready(); }, onErr));
   });
 }
