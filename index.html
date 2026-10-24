@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2d6a4d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Köksplanen">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Köksplanen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: mobilförst, en kolumn med flikar i botten; varje flik är en arbetsyta, inte en sida att läsa. */
+:root{
+  --bg:#f2f4ef; --surface:#ffffff; --sunk:#e8ece5; --ink:#1c2822; --muted:#5d6c64; --line:#d9e0d8;
+  --accent:#2d6a4d; --accent-ink:#ffffff; --accent-soft:#dcebe2; --mark:#e6b52e; --mark-soft:#f8ecc6; --mark-ink:#4a3a08;
+  --done:#98a49d; --danger:#b23a2e;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111714; --surface:#19211d; --sunk:#151c18; --ink:#e4ebe6; --muted:#9aa9a1; --line:#2a3530;
+  --accent:#6dbd92; --accent-ink:#0d1912; --accent-soft:#1f3329; --mark:#e0b43f; --mark-soft:#3a3016; --mark-ink:#f6e3a6;
+  --done:#5c6a62; --danger:#e57366; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111714; --surface:#19211d; --sunk:#151c18; --ink:#e4ebe6; --muted:#9aa9a1; --line:#2a3530;
+  --accent:#6dbd92; --accent-ink:#0d1912; --accent-soft:#1f3329; --mark:#e0b43f; --mark-soft:#3a3016; --mark-ink:#f6e3a6;
+  --done:#5c6a62; --danger:#e57366; color-scheme:dark}
+
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.login{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:14px;max-width:420px;margin:0 auto;text-align:left}
+.login h1{font-size:2.6rem}
+.login p{color:var(--muted);margin:0}
+.who{margin-top:28px;color:var(--muted);font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px calc(96px + env(safe-area-inset-bottom,0px))}
+
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font:800 1.9rem/1 var(--display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font:700 1.25rem/1.15 var(--display);margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem}
+.banner{background:var(--mark-soft);color:var(--mark-ink);border-radius:var(--r);padding:10px 12px;font-size:.92rem;margin-bottom:12px}
+
+/* Bottenflikar */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav.tabs .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-weight:600;font-size:.8rem}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"]{color:var(--accent)}
+nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:.7rem;line-height:18px;margin-left:4px}
+
+/* Formulär */
+.addrow{display:flex;gap:8px}
+.field{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.field:focus{outline:2px solid var(--accent);outline-offset:-1px}
+select.field{flex:0 0 auto;max-width:42%}
+.btn{border:0;border-radius:var(--r);padding:12px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
+.btn.ghost{background:var(--sunk);color:var(--ink)}
+.btn.small{padding:7px 12px;font-size:.88rem}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.88rem;color:var(--ink)}
+.chip:active{background:var(--accent-soft)}
+
+/* Handlingslista */
+.group{margin-top:18px}
+.group h3{font:600 .75rem/1 var(--body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 6px 2px;display:flex;justify-content:space-between}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:12px 10px 12px 12px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.tick{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);background:transparent;display:grid;place-items:center;padding:0}
+.tick svg{width:15px;height:15px;opacity:0}
+.item.done .tick{background:var(--done);border-color:var(--done)}
+.item.done .tick svg{opacity:1;color:var(--surface)}
+.item .txt{flex:1;min-width:0;cursor:pointer}
+.item .name{font-weight:600;overflow-wrap:anywhere}
+.item .meta{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
+.item.done .name{text-decoration:line-through;color:var(--done);font-weight:500}
+.x{flex:0 0 auto;border:0;background:none;color:var(--muted);width:32px;height:32px;border-radius:8px;font-size:1.2rem;line-height:1}
+.x:hover{background:var(--sunk)}
+.empty{text-align:center;color:var(--muted);padding:34px 16px;border:1px dashed var(--line);border-radius:var(--r);margin-top:18px}
+.empty strong{display:block;color:var(--ink);font:700 1.1rem var(--display);margin-bottom:4px}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;padding:1px 7px;border-radius:6px;background:var(--mark-soft);color:var(--mark-ink);vertical-align:1px;margin-left:6px}
+
+/* Veckomeny */
+.weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.weeknav .lbl{font-weight:700;text-align:center;flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:40px;height:40px;display:grid;place-items:center}
+.iconbtn svg{width:20px;height:20px}
+.day{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:12px;border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.day.today{background:var(--accent-soft)}
+.dlabel{display:flex;flex-direction:column;line-height:1.1}
+.dlabel b{font:700 1.05rem var(--display)}
+.dlabel span{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meals{display:flex;flex-direction:column;gap:6px;min-width:0}
+.meal{display:flex;align-items:center;gap:8px;min-width:0}
+.meal .k{flex:0 0 52px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.slot{flex:1;min-width:0;text-align:left;border:1px dashed var(--line);background:transparent;border-radius:10px;padding:8px 10px;color:var(--muted);overflow-wrap:anywhere}
+.slot.set{border-style:solid;border-color:transparent;background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+.slot.rester{background:var(--mark-soft);color:var(--mark-ink);box-shadow:none}
+.rq{flex:0 0 auto;border:1px solid var(--mark);background:transparent;color:var(--ink);border-radius:999px;padding:6px 10px;font-size:.8rem;font-weight:600}
+.rq[aria-pressed="true"]{background:var(--mark);color:#2b2205}
+
+.panel{margin-top:22px}
+.panel .head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ing{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer}
+.ing:first-child{border-top:0}
+.ing input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.ing .t{flex:1;min-width:0}
+.ing .amt{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
+.ing .why{font-size:.75rem;color:var(--muted)}
+.ing.off .t{opacity:.6}
+
+/* Rätter */
+.dish{display:flex;align-items:center;gap:10px;padding:12px;border-top:1px solid var(--line);cursor:pointer}
+.dish:first-child{border-top:0}
+.dish .t{flex:1;min-width:0}
+.dish .n{font-weight:600}
+.dish .i{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Ark (bottom sheet) */
+.scrim{position:fixed;inset:0;background:rgba(10,16,13,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:88%;overflow:auto;border-radius:18px 18px 0 0;
+  padding-block:16px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet h2{margin-bottom:12px}
+.stack{display:flex;flex-direction:column;gap:10px}
+label.l{font-size:.8rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
+.hint{font-size:.8rem;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:60;max-width:90%;text-align:center}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap login" id="login" hidden>
+  <h1>Köksplanen</h1>
+  <p id="loginMsg">Familjens handlingslista och veckomeny. Logga in med ditt Google-konto för att se er gemensamma lista.</p>
+  <div><button class="btn" id="loginBtn">Logga in med Google</button></div>
+</div>
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <h1 id="viewTitle">Handla</h1>
+    <span class="sub" id="syncState">Ansluter…</span>
+  </header>
+  <div class="banner" id="offline" hidden></div>
+
+  <!-- HANDLA -->
+  <section id="v-shop">
+    <form class="addrow" id="addForm" autocomplete="off">
+      <input class="field" id="addName" placeholder="Vad behöver köpas?" aria-label="Vara" enterkeyhint="done">
+      <select class="field" id="addCat" aria-label="Kategori"></select>
+      <button class="btn" id="addBtn" type="submit">Lägg till</button>
+    </form>
+    <div class="chips" id="quick"></div>
+    <div id="shopList"></div>
+  </section>
+
+  <!-- VECKOMENY -->
+  <section id="v-plan" hidden>
+    <div class="weeknav">
+      <button class="iconbtn" id="prevW" aria-label="Föregående 7 dagar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="lbl" id="weekLbl"></div>
+      <button class="iconbtn" id="nextW" aria-label="Nästa 7 dagar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn ghost small" id="fillRandom">Slumpa tomma middagar</button>
+      <button class="btn ghost small" id="allRester">Rester till alla luncher</button>
+    </div>
+    <div class="list" id="days"></div>
+    <div class="panel">
+      <div class="head">
+        <div><h2>Att handla till menyn</h2><div class="sub" id="ingSub"></div></div>
+        <button class="btn" id="ingAdd">Lägg på listan</button>
+      </div>
+      <div id="ingList"></div>
+    </div>
+  </section>
+
+  <!-- RÄTTER -->
+  <section id="v-dish" hidden>
+    <div class="addrow">
+      <input class="field" id="dishSearch" placeholder="Sök rätt eller ingrediens" aria-label="Sök rätt">
+      <button class="btn" id="newDish">Ny rätt</button>
+    </div>
+    <div id="dishList" style="margin-top:14px"></div>
+    <div class="who"><span id="whoAmI"></span><button class="btn ghost small" id="logoutBtn" type="button">Logga ut</button></div>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist" hidden>
+  <div class="in">
+    <button role="tab" data-v="shop" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l-1.5 12.5a1 1 0 0 1-1 .9h-9a1 1 0 0 1-1-.9z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span>Handla<span class="badge" id="shopBadge" hidden></span></span></button>
+    <button role="tab" data-v="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Veckomeny</span></button>
+    <button role="tab" data-v="dish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16a8 8 0 0 1-16 0z"/><path d="M12 9V5M8.5 9.5 7 6M15.5 9.5 17 6"/></svg><span>Rätter</span></button>
+  </div>
+</nav>
+
+<div id="sheetHost"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { FIREBASE_CONFIG } from "./config.js";
+import { SEED_DISHES } from "./seed.js";
+(() => {
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s || "").trim().toLowerCase();
+const cap = s => { s = String(s || "").trim(); return s ? s[0].toUpperCase() + s.slice(1) : s; };
+
+/* ---------- Kategorier ---------- */
+const CATS = [
+  ["frukt","Frukt & grönt"],["brod","Bröd"],["mejeri","Mejeri & ägg"],["kott","Kött, fisk & chark"],
+  ["skafferi","Skafferi"],["frys","Fryst"],["dryck","Dryck"],["hund","Hunden"],["hushall","Hushåll & hygien"],["ovrigt","Övrigt"]
+];
+const CATNAME = Object.fromEntries(CATS);
+// Ordningen spelar roll: första träff vinner.
+const GUESS = [
+  ["hund",["hund","bajspås","tuggben","kattsand"]],
+  ["hushall",["fryspås","påsar","soppås","toalettpapper","toapapper","hushållspapper","diskmedel","disktablett","tvättmedel","sköljmedel","tvål","schampo","balsam","tandkräm","tandborst","folie","bakplåtspapper","batteri","servett","disksvamp","rengöring","glödlampa","blöj","våtservett","deodorant"]],
+  ["dryck",["läsk","cola","öl","vin","juice","saft","vatten","cider","pepsi","fanta","sprite","energidryck","alkoholfri"]],
+  ["frys",["fryst","glass","pommes","frysta"]],
+  ["brod",["bröd","bulle","bullar","tortilla","pita","knäcke","limpa","baguette","wraps","tunnbröd","hamburgerbröd","korvbröd","frukostbröd"]],
+  ["kott",["kött","färs","kyckling","fläsk","bacon","korv","skinka","lax","torsk","fisk","räk","biff","entrecote","oxfil","kassler","chorizo","kalkon","lamm","salami","pålägg","sej","kotlett","högrev","rostbiff","fläskfil","kebab"]],
+  ["skafferi",["pasta","spaghetti","makaron","ris","mjöl","socker","olja","vinäger","krossade","passerade","tomatpuré","buljong","fond","krydd","salt","peppar","nudlar","taco","kokosmjölk","bönor","linser","kikärt","müsli","flingor","havre","gryn","ketchup","senap","majonnäs","soja","honung","sylt","kaffe","te","couscous","bulgur","sås","curry","paprikapulver","oregano","kanel","bakpulver","jäst","nötter","russin","chips","godis","choklad","tonfisk","oliv","pesto","sambal","sriracha","lasagneplattor","gnocchi","majs"]],
+  ["frukt",["äpple","banan","päron","citron","lime","apelsin","clementin","tomat","gurka","sallad","lök","vitlök","potatis","morot","morötter","paprika","broccoli","blomkål","avokado","spenat","champinjon","svamp","zucchini","purjo","ingefära","persilja","dill","basilika","koriander","kål","frukt","bär","druv","mango","ruccola","selleri","sötpotatis","chili","rödbet","melon","kiwi","sparris","ärt","rädis","örter","majskolv","aubergine","grönsak"]],
+  ["mejeri",["mjölk","fil","yoghurt","ost","smör","grädde","crème","creme","ägg","kvarg","keso","halloumi","feta","mozzarella","parmesan","mascarpone","bregott","kesella","färskost","matlagningsgrädde","havredryck"]],
+];
+function guessCat(name){
+  const n = norm(name); if(!n) return "ovrigt";
+  const words = n.split(/[^a-zåäöéü]+/).filter(Boolean);
+  for (const [cat, kws] of GUESS){
+    for (const kw of kws){
+      if (kw.length <= 3){ if (words.some(w => w === kw || w.startsWith(kw))) return cat; }
+      else if (n.includes(kw)) return cat;
+    }
+  }
+  return "ovrigt";
+}
+const STAPLES = ["salt","peppar","svartpeppar","olja","olivolja","rapsolja","vatten","socker","vetemjöl","smör","matolja"];
+const isStaple = n => STAPLES.includes(norm(n));
+
+const QUICK = ["Mjölk","Bröd","Bananer","Ägg","Kaffe","Bajspåsar","Hundmat","Fryspåsar","Toapapper","Läsk","Öl","Smör","Ost"];
+
+/* ---------- Datum ---------- */
+const DAYS = ["Sön","Mån","Tis","Ons","Tor","Fre","Lör"];
+const MONTHS = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+const pad = n => String(n).padStart(2,"0");
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+
+/* ---------- Tillstånd ---------- */
+const S = { items: [], dishes: [], days: {}, view: "shop", offset: 0, ingOff: new Set(), ingOn: new Set(), search: "", names: {} };
+let db = null, me = null, myName = "", fsRef = null;
+
+function toast(msg){
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
+}
+function showErr(e){
+  console.error(e);
+  if (e && e.code === "quota_exceeded") toast("Databasen är full. Rensa köpta varor och försök igen.");
+  else if (e && e.code === "permission-denied") toast("Ditt konto har inte behörighet att ändra listan.");
+  else toast("Det gick inte att spara. Kontrollera anslutningen och försök igen.");
+}
+
+/* ---------- Flikar ---------- */
+const TITLES = { shop:"Handla", plan:"Veckomeny", dish:"Rätter" };
+function setView(v){
+  S.view = v;
+  for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.v === v));
+  $("#v-shop").hidden = v !== "shop"; $("#v-plan").hidden = v !== "plan"; $("#v-dish").hidden = v !== "dish";
+  $("#viewTitle").textContent = TITLES[v];
+  try { localStorage.setItem("kp-view", v); } catch {}
+  render(); window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setView(b.dataset.v)));
+
+/* ---------- Handla ---------- */
+$("#addCat").innerHTML = `<option value="">Kategori (auto)</option>` + CATS.map(([k,n]) => `<option value="${k}">${n}</option>`).join("");
+$("#quick").innerHTML = QUICK.map(q => `<button type="button" class="chip" data-q="${esc(q)}">+ ${esc(q)}</button>`).join("");
+$("#quick").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) addItem(b.dataset.q); });
+$("#addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const raw = $("#addName").value.trim(); if (!raw) return;
+  // Stöd för "Mjölk, 2 st" -> namn + anteckning
+  const [name, ...rest] = raw.split(",");
+  await addItem(name, rest.join(",").trim(), $("#addCat").value);
+  $("#addName").value = ""; $("#addCat").value = ""; $("#addName").focus();
+});
+
+function openItem(name){ return S.items.find(i => !i.done && norm(i.name) === norm(name)); }
+
+async function addItem(name, note = "", cat = "", source = "manuell"){
+  name = cap(name); if (!name || !db) return false;
+  const existing = openItem(name);
+  if (existing){
+    if (note && !norm(existing.note).includes(norm(note))){
+      await db.doc("items/" + existing.id).update({ note: existing.note ? existing.note + " + " + note : note }).catch(showErr);
+    } else if (source === "manuell") toast(`${name} står redan på listan`);
+    return false;
+  }
+  await db.collection("items").add({ name, note: note || "", cat: cat || guessCat(name), done: false,
+    createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName, source }).catch(showErr);
+  return true;
+}
+
+async function toggleItem(id){
+  const it = S.items.find(i => i.id === id); if (!it) return;
+  await db.doc("items/" + id).update({ done: !it.done, doneAt: !it.done ? Date.now() : null }).catch(showErr);
+}
+async function removeItem(id){ await db.doc("items/" + id).delete().catch(showErr); }
+async function clearDone(){
+  const done = S.items.filter(i => i.done);
+  for (const i of done){ try { await db.doc("items/" + i.id).delete(); } catch(e){ showErr(e); break; } }
+  toast(`Rensade ${done.length} köpta varor`);
+}
+
+$("#shopList").addEventListener("click", e => {
+  const row = e.target.closest("[data-id]"); if (!row) return;
+  if (e.target.closest(".x")) removeItem(row.dataset.id);
+  else if (e.target.closest(".tick, .txt")) toggleItem(row.dataset.id);
+});
+$("#shopList").addEventListener("click", e => { if (e.target.closest("#clearDone")) clearDone(); });
+
+function itemRow(i){
+  const who = i.addedByName || "";
+  const meta = [i.note, i.source === "meny" ? "från veckomenyn" : "", who ? "lagt till av " + who : ""].filter(Boolean).join(" · ");
+  return `<div class="item${i.done ? " done" : ""}" data-id="${esc(i.id)}">
+    <button class="tick" aria-label="${i.done ? "Markera som ej köpt" : "Markera som köpt"}: ${esc(i.name)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <div class="txt"><div class="name">${esc(i.name)}</div>${meta ? `<div class="meta">${esc(meta)}</div>` : ""}</div>
+    <button class="x" aria-label="Ta bort ${esc(i.name)}">×</button></div>`;
+}
+
+function renderShop(){
+  const open = S.items.filter(i => !i.done).sort((a,b) => a.createdAt - b.createdAt);
+  const done = S.items.filter(i => i.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0));
+  let html = "";
+  if (!open.length && !done.length){
+    html = `<div class="empty"><strong>Listan är tom</strong>Skriv in en vara ovan eller tryck på ett snabbval. Allt ni lägger till syns direkt för er båda.</div>`;
+  } else if (!open.length){
+    html = `<div class="empty"><strong>Allt är handlat</strong>Inget kvar att köpa just nu.</div>`;
+  }
+  for (const [k, label] of CATS){
+    const g = open.filter(i => (CATNAME[i.cat] ? i.cat : "ovrigt") === k);
+    if (!g.length) continue;
+    html += `<div class="group"><h3><span>${label}</span><span>${g.length}</span></h3><div class="list">${g.map(itemRow).join("")}</div></div>`;
+  }
+  if (done.length){
+    html += `<div class="group"><h3><span>Köpt</span><button class="btn ghost small" id="clearDone" type="button">Rensa köpta (${done.length})</button></h3><div class="list">${done.slice(0,40).map(itemRow).join("")}</div></div>`;
+  }
+  $("#shopList").innerHTML = html;
+  const b = $("#shopBadge"); b.hidden = !open.length; b.textContent = open.length;
+}
+
+/* ---------- Veckomeny ---------- */
+const dishById = id => S.dishes.find(d => d.id === id);
+function mealLabel(m){
+  if (!m) return "";
+  if (m.type === "rester") return "Rester";
+  if (m.dishId){ const d = dishById(m.dishId); return d ? d.name : (m.text || "Borttagen rätt"); }
+  return m.text || "";
+}
+function weekDates(){ const s = addDays(today0(), S.offset*7); return Array.from({length:7}, (_,i) => addDays(s,i)); }
+
+async function saveMeal(key, meal, which){
+  const cur = S.days[key] || {};
+  const next = { date: key, dinner: cur.dinner || null, lunch: cur.lunch || null };
+  next[which] = meal;
+  S.days[key] = next; render();
+  await db.doc("days/" + key).set(next).catch(showErr);
+}
+
+function renderPlan(){
+  const ds = weekDates(), tk = keyOf(today0());
+  const a = ds[0], b = ds[6];
+  $("#weekLbl").textContent = `${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+  $("#days").innerHTML = ds.map(d => {
+    const k = keyOf(d), day = S.days[k] || {};
+    const dn = mealLabel(day.dinner), ln = mealLabel(day.lunch), isR = day.lunch && day.lunch.type === "rester";
+    return `<div class="day${k === tk ? " today" : ""}" data-k="${k}">
+      <div class="dlabel"><b>${k === tk ? "Idag" : DAYS[d.getDay()]}</b><span>${d.getDate()} ${MONTHS[d.getMonth()]}</span></div>
+      <div class="meals">
+        <div class="meal"><span class="k">Lunch</span>
+          <button class="slot${ln ? " set" : ""}${isR ? " rester" : ""}" data-w="lunch">${ln ? esc(ln) : "Välj lunch"}</button>
+          <button class="rq" data-r="1" aria-pressed="${isR}">Rester</button></div>
+        <div class="meal"><span class="k">Middag</span>
+          <button class="slot${dn ? " set" : ""}" data-w="dinner">${dn ? esc(dn) : "Välj middag"}</button></div>
+      </div></div>`;
+  }).join("");
+  renderIngredients();
+}
+
+$("#days").addEventListener("click", e => {
+  const day = e.target.closest("[data-k]"); if (!day) return;
+  const k = day.dataset.k;
+  if (e.target.closest("[data-r]")){
+    const cur = S.days[k] && S.days[k].lunch;
+    saveMeal(k, cur && cur.type === "rester" ? null : { type: "rester" }, "lunch");
+  } else { const s = e.target.closest("[data-w]"); if (s) openPicker(k, s.dataset.w); }
+});
+$("#prevW").addEventListener("click", () => { S.offset--; renderPlan(); });
+$("#nextW").addEventListener("click", () => { S.offset++; renderPlan(); });
+$("#allRester").addEventListener("click", async () => {
+  for (const d of weekDates()){ const k = keyOf(d); if (!(S.days[k] && S.days[k].lunch)) await saveMeal(k, { type: "rester" }, "lunch"); }
+});
+$("#fillRandom").addEventListener("click", async () => {
+  if (!S.dishes.length) return toast("Lägg till rätter först");
+  const ds = weekDates().map(keyOf);
+  const used = new Set(ds.map(k => S.days[k]?.dinner?.dishId).filter(Boolean));
+  let pool = S.dishes.filter(d => !used.has(d.id)).sort(() => Math.random() - .5);
+  let n = 0;
+  for (const k of ds){
+    if (S.days[k]?.dinner) continue;
+    if (!pool.length) pool = S.dishes.slice().sort(() => Math.random() - .5);
+    const d = pool.shift(); await saveMeal(k, { type: "dish", dishId: d.id }, "dinner"); n++;
+  }
+  toast(n ? `Fyllde ${n} middagar. Tryck på en för att byta.` : "Alla middagar är redan valda");
+});
+
+/* Ingredienser för veckan */
+function weekIngredients(){
+  const map = new Map();
+  for (const d of weekDates()){
+    const day = S.days[keyOf(d)] || {};
+    for (const m of [day.dinner, day.lunch]){
+      if (!m || !m.dishId) continue;
+      const dish = dishById(m.dishId); if (!dish) continue;
+      for (const ing of dish.ingredients || []){
+        const key = norm(ing.n); if (!key) continue;
+        if (!map.has(key)) map.set(key, { key, name: cap(ing.n), amts: [], dishes: new Set() });
+        const e = map.get(key); if (ing.m) e.amts.push(ing.m); e.dishes.add(dish.name);
+      }
+    }
+  }
+  return [...map.values()].sort((a,b) => {
+    const ca = CATS.findIndex(c => c[0] === guessCat(a.name)), cb = CATS.findIndex(c => c[0] === guessCat(b.name));
+    return ca - cb || a.name.localeCompare(b.name, "sv");
+  });
+}
+function ingChecked(e){
+  if (S.ingOff.has(e.key)) return false;
+  if (S.ingOn.has(e.key)) return true;
+  return !isStaple(e.name) && !openItem(e.name);
+}
+function renderIngredients(){
+  const list = weekIngredients();
+  const dishesCount = new Set(weekDates().flatMap(d => { const x = S.days[keyOf(d)] || {}; return [x.dinner?.dishId, x.lunch?.dishId]; }).filter(Boolean)).size;
+  if (!list.length){
+    $("#ingSub").textContent = "";
+    $("#ingList").innerHTML = `<div class="empty" style="margin-top:0"><strong>Inga rätter valda än</strong>Välj middagar ovan så samlas allt ni behöver här.</div>`;
+    $("#ingAdd").disabled = true; return;
+  }
+  const n = list.filter(ingChecked).length;
+  $("#ingSub").textContent = `${list.length} ingredienser från ${dishesCount} rätter · ${n} valda`;
+  $("#ingAdd").disabled = !n; $("#ingAdd").textContent = n ? `Lägg ${n} på listan` : "Lägg på listan";
+  $("#ingList").innerHTML = `<div class="list">` + list.map(e => {
+    const on = ingChecked(e), already = openItem(e.name), st = isStaple(e.name);
+    return `<label class="ing${on ? "" : " off"}"><input type="checkbox" data-ing="${esc(e.key)}" ${on ? "checked" : ""}>
+      <div class="t"><div><b>${esc(e.name)}</b>${already ? `<span class="tag">på listan</span>` : st ? `<span class="tag">basvara</span>` : ""}</div>
+      ${e.amts.length ? `<div class="amt">${esc(e.amts.join(" + "))}</div>` : ""}
+      <div class="why">${esc([...e.dishes].join(", "))}</div></div></label>`;
+  }).join("") + `</div>`;
+}
+$("#ingList").addEventListener("change", e => {
+  const k = e.target.dataset.ing; if (!k) return;
+  if (e.target.checked){ S.ingOff.delete(k); S.ingOn.add(k); } else { S.ingOn.delete(k); S.ingOff.add(k); }
+  renderIngredients();
+});
+$("#ingAdd").addEventListener("click", async () => {
+  const list = weekIngredients().filter(ingChecked);
+  $("#ingAdd").disabled = true;
+  let added = 0;
+  for (const e of list){ if (await addItem(e.name, e.amts.join(" + "), "", "meny")) added++; }
+  S.ingOn.clear(); S.ingOff.clear();
+  toast(`${added} nya varor på handlingslistan`);
+  render();
+});
+
+/* ---------- Ark ---------- */
+function openSheet(html, onMount){
+  const host = $("#sheetHost");
+  host.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
+  const scrim = host.firstElementChild;
+  scrim.addEventListener("click", e => { if (e.target === scrim) closeSheet(); });
+  onMount && onMount(scrim.firstElementChild);
+}
+function closeSheet(){ $("#sheetHost").innerHTML = ""; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+function openPicker(k, which){
+  const d = new Date(k + "T12:00:00");
+  const label = `${which === "dinner" ? "Middag" : "Lunch"} ${DAYS[d.getDay()].toLowerCase()} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  openSheet(`<h2>${label}</h2>
+    <div class="stack">
+      <input class="field" id="pkSearch" placeholder="Sök bland ${S.dishes.length} rätter eller skriv något eget" autocomplete="off">
+      <div class="row">
+        ${which === "lunch" ? `<button class="btn small" data-pk="rester">Rester</button>` : ""}
+        <button class="btn ghost small" data-pk="text">Använd det jag skrev</button>
+        <button class="btn ghost small" data-pk="clear">Töm</button>
+      </div>
+      <div class="list" id="pkList"></div>
+    </div>`, sheet => {
+    const draw = () => {
+      const q = norm($("#pkSearch").value);
+      const ds = S.dishes.filter(x => !q || norm(x.name).includes(q) || (x.ingredients||[]).some(i => norm(i.n).includes(q)));
+      $("#pkList").innerHTML = ds.length ? ds.map(x => `<div class="dish" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div></div></div>`).join("")
+        : `<div class="dish" style="cursor:default"><div class="t sub">Ingen rätt matchar. Tryck på "Använd det jag skrev" eller skapa rätten under Rätter.</div></div>`;
+    };
+    draw();
+    $("#pkSearch").addEventListener("input", draw);
+    sheet.addEventListener("click", e => {
+      const p = e.target.closest("[data-pick]");
+      if (p){ saveMeal(k, { type: "dish", dishId: p.dataset.pick }, which); return closeSheet(); }
+      const b = e.target.closest("[data-pk]"); if (!b) return;
+      if (b.dataset.pk === "rester") saveMeal(k, { type: "rester" }, which);
+      if (b.dataset.pk === "clear") saveMeal(k, null, which);
+      if (b.dataset.pk === "text"){ const t = $("#pkSearch").value.trim(); if (!t) return $("#pkSearch").focus(); saveMeal(k, { type: "text", text: cap(t) }, which); }
+      closeSheet();
+    });
+  });
+}
+
+/* ---------- Rätter ---------- */
+const ingToText = ings => (ings || []).map(i => i.m ? `${i.n}, ${i.m}` : i.n).join("\n");
+const textToIng = t => t.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+  const ix = l.indexOf(","); return ix < 0 ? { n: cap(l), m: "" } : { n: cap(l.slice(0, ix).trim()), m: l.slice(ix + 1).trim() };
+}).filter(i => i.n);
+
+function renderDishes(){
+  const q = norm(S.search);
+  const ds = S.dishes.filter(x => !q || norm(x.name).includes(q) || (x.ingredients||[]).some(i => norm(i.n).includes(q)));
+  if (!S.dishes.length){
+    $("#dishList").innerHTML = `<div class="empty"><strong>Inga rätter än</strong>Tryck på "Ny rätt" och skriv in en rätt ni brukar laga, med ingredienserna rad för rad.<div style="margin-top:12px"><button class="btn" data-seed="1" type="button">Lägg in ${SEED_DISHES.length} starträtter</button></div></div>`; return;
+  }
+  $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span></div>` +
+    (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", ")) || "Inga ingredienser"}</div></div><span class="count">${(x.ingredients||[]).length}</span></div>`).join("") + `</div>`
+      : `<div class="empty">Ingen rätt matchar "${esc(S.search)}".</div>`);
+}
+$("#dishSearch").addEventListener("input", e => { S.search = e.target.value; renderDishes(); });
+$("#newDish").addEventListener("click", () => editDish(null));
+$("#dishList").addEventListener("click", async e => {
+  const sb = e.target.closest("[data-seed]");
+  if (sb){
+    sb.disabled = true;
+    const b = writeBatch(fsRef);
+    for (const d of SEED_DISHES) b.set(doc(fsRef, "dishes", d.id), { name: d.name, ingredients: d.ingredients, builtin: true, updatedAt: Date.now() });
+    try { await b.commit(); toast("Starträtterna är inlagda"); } catch(err){ showErr(err); sb.disabled = false; }
+    return;
+  }
+});
+$("#dishList").addEventListener("click", e => { const r = e.target.closest("[data-dish]"); if (r) editDish(r.dataset.dish); });
+
+function editDish(id){
+  const d = id ? dishById(id) : null;
+  openSheet(`<h2>${d ? "Redigera rätt" : "Ny rätt"}</h2>
+    <form class="stack" id="dishForm">
+      <div><label class="l" for="dName">Namn</label><input class="field" style="width:100%" id="dName" value="${esc(d ? d.name : "")}" placeholder="t.ex. Kycklinggryta med ris" required></div>
+      <div><label class="l" for="dIng">Ingredienser, en per rad</label>
+        <textarea class="field" id="dIng" placeholder="Kycklingfilé, 600 g&#10;Ris, 4 port&#10;Gul lök&#10;Matlagningsgrädde, 2 dl">${esc(d ? ingToText(d.ingredients) : "")}</textarea>
+        <div class="hint">Skriv mängden efter ett kommatecken om ni vill, t.ex. "Köttfärs, 500 g".</div></div>
+      <div class="spread">
+        ${d ? `<button type="button" class="btn danger small" id="dDel">Ta bort rätten</button>` : "<span></span>"}
+        <div class="row"><button type="button" class="btn ghost" id="dCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
+      </div>
+    </form>`, () => {
+    if (!d) $("#dName").focus();
+    $("#dCancel").addEventListener("click", closeSheet);
+    $("#dishForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
+      if (!body.name) return;
+      closeSheet();
+      try { if (d) await db.doc("dishes/" + d.id).set(body); else await db.collection("dishes").add(body); toast("Rätten är sparad"); }
+      catch(err){ showErr(err); }
+    });
+    const del = $("#dDel");
+    if (del) del.addEventListener("click", async () => {
+      if (del.dataset.armed){ closeSheet(); await db.doc("dishes/" + d.id).delete().catch(showErr); toast("Rätten är borttagen"); }
+      else { del.dataset.armed = "1"; del.textContent = "Tryck igen för att ta bort"; }
+    });
+  });
+}
+
+/* ---------- Render ---------- */
+function render(){
+  renderShop();
+  if (S.view === "plan") renderPlan();
+  if (S.view === "dish") renderDishes();
+}
+
+
+/* ---------- Start ---------- */
+try { const v = localStorage.getItem("kp-view"); if (v && TITLES[v]) S.view = v; } catch {}
+setView(S.view);
+
+function makeDb(fs){
+  const wrap = s => ({ docs: s.docs.map(d => ({ id: d.id, data: () => d.data() })) });
+  return {
+    collection: p => ({ add: d => addDoc(collection(fs, p), d), onSnapshot: (n, e) => onSnapshot(collection(fs, p), s => n(wrap(s)), e) }),
+    doc: p => ({ set: d => setDoc(doc(fs, p), d), update: d => updateDoc(doc(fs, p), d), delete: () => deleteDoc(doc(fs, p)) }),
+  };
+}
+
+if (!FIREBASE_CONFIG){
+  $("#login").hidden = false; $("#loginBtn").hidden = true;
+  $("#loginMsg").textContent = "Appen är inte kopplad till någon databas än. Fyll i config.js med Firebase-inställningarna.";
+} else {
+  const fbApp = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(fbApp);
+  const provider = new GoogleAuthProvider();
+  fsRef = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  let unsubs = [];
+  $("#loginBtn").addEventListener("click", () => {
+    signInWithPopup(auth, provider).catch(e => {
+      if (["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code)) signInWithRedirect(auth, provider);
+      else if (e.code !== "auth/popup-closed-by-user") $("#loginMsg").textContent = "Inloggningen misslyckades (" + e.code + "). Försök igen.";
+    });
+  });
+  $("#logoutBtn").addEventListener("click", () => signOut(auth));
+  onAuthStateChanged(auth, u => {
+    unsubs.forEach(f => f()); unsubs = [];
+    $("#login").hidden = !!u; $("#app").hidden = !u; $("nav.tabs").hidden = !u;
+    if (!u){ db = null; return; }
+    me = u.uid; myName = (u.displayName || u.email || "").split(" ")[0];
+    $("#whoAmI").textContent = "Inloggad som " + (u.email || u.displayName || "");
+    db = makeDb(fsRef);
+    let first = 0;
+    const ready = () => { if (++first === 3) $("#syncState").textContent = "Synkad"; };
+    const onErr = e => {
+      console.error(e);
+      if (e.code === "permission-denied"){
+        $("#offline").hidden = false;
+        $("#offline").textContent = `Kontot ${u.email} har inte tillgång till listan. Logga ut och välj ett annat konto, eller be den som satte upp appen att lägga till din adress.`;
+      } else showErr(e);
+      $("#syncState").textContent = "Frånkopplad";
+    };
+    unsubs.push(db.collection("items").onSnapshot(s => { S.items = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); ready(); }, onErr));
+    unsubs.push(db.collection("dishes").onSnapshot(s => { S.dishes = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name, "sv")); render(); ready(); }, onErr));
+    unsubs.push(db.collection("days").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.days = o; render(); ready(); }, onErr));
+  });
+}
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+</script>
+</body>
+</html>
