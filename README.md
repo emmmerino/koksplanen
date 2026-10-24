@@ -19,3 +19,5 @@ Familjens gemensamma handlingslista, veckomeny och rättdatabas. En statisk webb
 ## Lägga på hemskärmen
 - iPhone: öppna sidan i Safari → Dela → Lägg till på hemskärmen.
 - Android: öppna sidan i Chrome → ⋮ → Installera appen / Lägg till på startskärmen.
+
+Appen: https://emmmerino.github.io/koksplanen/
