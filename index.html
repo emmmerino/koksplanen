@@ -282,7 +282,7 @@ const toPrice = v => { const n = Math.round(Number(String(v ?? "").replace(/\s/g
 const SEED_COST = Object.fromEntries(SEED_DISHES.map(d => [d.id, d.cost]));
 // Pris för en rätt: det ni själva angett, annars starträttens pris, annars en uppskattning från ingredienserna.
 const dishKcal = d => d ? estimateKcal(d.ingredients).perPortion : 0;
-const dishHealth = d => healthStars(dishKcal(d));
+const dishHealth = d => d ? healthStars(estimateKcal(d.ingredients).density) : 0;
 const dishTaste = d => (d && Number.isInteger(d.taste) && d.taste >= 1 && d.taste <= 5) ? d.taste : 0;
 // Fem stjärnor där n är ifyllda; kind styr färgen (nyttig eller gott).
 const stars = (n, kind) => `<span class="stars ${kind}" aria-label="${n} av 5">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
@@ -718,7 +718,7 @@ function renderDishes(){
   if (!S.dishes.length){
     $("#dishList").innerHTML = `<div class="empty"><strong>Inga rätter än</strong>Tryck på "Ny rätt" och skriv in en rätt ni brukar laga, med ingredienserna rad för rad.<div style="margin-top:12px"><button class="btn" data-seed="1" type="button">Lägg in ${SEED_DISHES.length} starträtter</button></div></div>`; return;
   }
-  const by = { taste: x => -dishTaste(x), health: x => dishKcal(x) || 1e9, cost: x => dishCost(x) || 1e9 }[S.dishSort];
+  const by = { taste: x => -dishTaste(x), health: x => estimateKcal(x.ingredients).density || 1e9, cost: x => dishCost(x) || 1e9 }[S.dishSort];
   if (by) ds.sort((a, b) => by(a) - by(b) || a.name.localeCompare(b.name, "sv"));
   $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span>
       <select class="sortsel" id="dishSort" aria-label="Sortera">${[["name","Sortera: Namn"],["taste","Godast först"],["health","Nyttigast först"],["cost","Billigast först"]].map(([k,n]) => `<option value="${k}"${(S.dishSort || "name") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>` +
@@ -776,7 +776,7 @@ function editDish(id){
     $("#dTaste").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; const n = Number(b.dataset.t); taste = taste === n ? 0 : n; drawTaste(); });
     const drawHealth = () => {
       const k = estimateKcal(textToIng($("#dIng").value));
-      $("#dHealth").innerHTML = k.perPortion ? `${stars(healthStars(k.perPortion), "health")} ≈ ${k.perPortion} kcal per portion (4 portioner)${k.unknown ? ` · ${k.unknown} gissade` : ""}` : "Skriv in ingredienserna så räknar appen ut det.";
+      $("#dHealth").innerHTML = k.perPortion ? `${stars(healthStars(k.density), "health")} ≈ ${k.density} kcal per 100 g · ≈ ${k.perPortion} kcal per portion (4 portioner)${k.unknown ? ` · ${k.unknown} gissade` : ""}<br>Stjärnorna bygger på kcal per 100 g, så de beror inte på hur stort receptet är.` : "Skriv in ingredienserna så räknar appen ut det.";
     };
     drawHealth();
     $("#dIng").addEventListener("input", () => { drawEst(); drawHealth(); });
