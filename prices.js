@@ -172,3 +172,153 @@ export function estimateDish(ingredients) {
   const total = rows.reduce((a, r) => a + r.cost, 0);
   return { total: rows.length ? Math.max(5, Math.round(total / 5) * 5) : 0, rows, unknown: rows.filter(r => !r.known).length };
 }
+
+// ---------- Kalorier ----------
+// kc = kcal per 100 g (eller 100 ml), w = gram per styck, wp = gram per paket/burk/påse,
+// wd = gram som används när ingen mängd anges, port = kg torrvara per portion,
+// d = gram per ml för torrvaror som mäts i dl.
+const K = [
+  [["buljong", "fond"], { kc: 200, w: 5, wd: 5 }],
+  [["tacosås"], { kc: 40, wp: 230, wd: 230 }],
+  [["tacokrydda"], { kc: 300, wp: 28, wd: 28 }],
+  [["currypasta"], { kc: 150, wp: 100, wd: 30 }],
+  [["gräddsås", "brunsås"], { kc: 120, wp: 250, wd: 250 }],
+  [["bearnaise", "aioli", "majonnäs"], { kc: 550, wp: 250, wd: 100 }],
+  [["remoulad", "dressing", "sweet chili", "chilisås"], { kc: 350, wp: 250, wd: 80 }],
+  [["sojasås", "soja", "sambal", "sriracha", "fisksås", "ostronsås"], { kc: 60, wd: 30 }],
+  [["ketchup", "senap"], { kc: 100, wd: 20 }],
+  [["sylt", "lingon"], { kc: 180, wp: 400, wd: 60 }],
+  [["pesto"], { kc: 450, wp: 190, wd: 190 }],
+  [["tzatziki"], { kc: 120, wp: 200, wd: 200 }],
+  [["pressgurka", "saltgurka", "inlagd gurka"], { kc: 40, wd: 100 }],
+  [["salt", "peppar", "oregano", "timjan", "paprikapulver", "chilipulver", "spiskummin", "kanel", "curry", "krydd", "lagerblad"], { kc: 0, wd: 5 }],
+  [["olivolja", "rapsolja", "matolja", "olja"], { kc: 900, wd: 15 }],
+  [["vinäger", "ättika"], { kc: 0, wd: 15 }],
+  [["socker", "honung", "sirap"], { kc: 400, wd: 10, d: 0.85 }],
+  [["bakpulver", "jäst", "maizena"], { kc: 0, wd: 5 }],
+  [["kokosmjölk"], { kc: 180, wp: 400, wd: 400 }],
+  [["tomatpuré"], { kc: 80, wp: 70, wd: 30 }],
+  [["krossade", "passerade", "tomatsås"], { kc: 25, wp: 400, wd: 400 }],
+
+  [["kycklingfärs"], { kc: 150, wd: 500 }],
+  [["fläskfärs"], { kc: 250, wd: 500 }],
+  [["köttfärs", "nötfärs", "blandfärs", "färs"], { kc: 220, wd: 500 }],
+  [["köttbullar"], { kc: 230, wp: 500, wd: 500 }],
+  [["kycklingklubb", "kycklinglår", "kycklingvingar", "hel kyckling"], { kc: 190, wd: 1000 }],
+  [["kycklingfilé", "kycklingbröst", "kyckling"], { kc: 110, wd: 600 }],
+  [["fläskfilé"], { kc: 120, wd: 600 }],
+  [["fläskkarré", "kotlett", "karré", "fläskkött", "sidfläsk"], { kc: 220, wd: 600 }],
+  [["entrecote", "oxfilé", "ryggbiff", "biff", "högrev", "nötkött", "grytbitar"], { kc: 180, wd: 500 }],
+  [["lamm"], { kc: 250, wd: 500 }],
+  [["bacon"], { kc: 400, wp: 140, wd: 140 }],
+  [["falukorv"], { kc: 240, w: 800, wd: 800 }],
+  [["chorizo", "salsiccia", "korv", "prinskorv"], { kc: 280, wp: 400, wd: 400 }],
+  [["skinka", "kassler", "salami", "pålägg"], { kc: 130, wp: 120, wd: 120 }],
+  [["fiskpinnar"], { kc: 200, wp: 450, wd: 450 }],
+  [["lax"], { kc: 200, wd: 600 }],
+  [["torsk", "sej", "kolja", "fisk"], { kc: 80, wd: 600 }],
+  [["räkor", "räk"], { kc: 90, wd: 200 }],
+  [["tonfisk"], { kc: 110, wp: 120, wd: 120 }],
+
+  [["äggnudlar", "nudlar"], { kc: 360, wp: 250, wd: 250 }],
+  [["ägg"], { kc: 140, w: 55, wd: 330 }],
+  [["crème fraiche", "creme fraiche", "gräddfil", "turkisk yoghurt", "kvarg"], { kc: 250, wp: 200, wd: 200 }],
+  [["matlagningsgrädde", "vispgrädde", "grädde"], { kc: 220, wp: 250, wd: 250 }],
+  [["havredryck", "mjölk"], { kc: 50, wd: 200 }],
+  [["yoghurt", "fil"], { kc: 70, wd: 200 }],
+  [["smör", "bregott"], { kc: 740, wd: 15 }],
+  [["parmesan", "pecorino"], { kc: 400, wd: 50 }],
+  [["mozzarella", "burrata"], { kc: 250, w: 125, wp: 125, wd: 125 }],
+  [["halloumi"], { kc: 320, w: 200, wp: 200, wd: 200 }],
+  [["feta"], { kc: 270, w: 150, wp: 150, wd: 150 }],
+  [["färskost", "philadelphia"], { kc: 250, wp: 200, wd: 200 }],
+  [["ost"], { kc: 380, w: 10, wd: 100 }],
+
+  [["lasagneplattor"], { kc: 350, wp: 250, wd: 250 }],
+  [["spaghetti", "pasta", "makaroner", "penne", "tagliatelle", "fusilli", "gnocchi"], { kc: 350, port: 0.08, wd: 400 }],
+  [["couscous", "bulgur", "matvete", "quinoa"], { kc: 350, port: 0.07, wd: 300, d: 0.7 }],
+  [["ris"], { kc: 350, port: 0.075, wd: 300, d: 0.85 }],
+  [["vetemjöl", "mjöl"], { kc: 350, wd: 30, d: 0.6 }],
+  [["kidneybönor", "bönor", "kikärtor", "linser"], { kc: 100, wp: 250, wd: 250 }],
+  [["majs"], { kc: 80, wp: 200, wd: 200 }],
+  [["oliver"], { kc: 150, wp: 100, wd: 50 }],
+  [["tortilla", "wraps"], { kc: 300, w: 40, wp: 320, wd: 320 }],
+  [["hamburgerbröd", "korvbröd"], { kc: 270, w: 70, wp: 280, wd: 280 }],
+  [["pizzadeg"], { kc: 270, w: 400, wd: 400 }],
+  [["pitabröd", "naanbröd", "bröd", "baguette", "ciabatta"], { kc: 250, w: 50, wp: 400, wd: 200 }],
+  [["ströbröd", "panko"], { kc: 370, wd: 30 }],
+
+  [["pyttipanna"], { kc: 150, wp: 1000, wd: 1000 }],
+  [["pommes"], { kc: 150, wp: 750, wd: 750 }],
+  [["wokgrönsaker", "frysta grönsaker", "grönsaksblandning"], { kc: 30, wp: 500, wd: 500 }],
+  [["ärtor", "haricots verts", "sockerärtor", "bönor frysta"], { kc: 60, wp: 400, wd: 300 }],
+
+  [["sötpotatis"], { kc: 85, w: 300, wd: 600 }],
+  [["potatis"], { kc: 75, w: 100, wd: 800 }],
+  [["vitlök"], { kc: 140, w: 40, wd: 10 }],
+  [["purjolök", "purjo"], { kc: 30, w: 200, wd: 200 }],
+  [["rödlök", "gul lök", "schalottenlök", "lök"], { kc: 40, w: 120, wd: 120 }],
+  [["morötter", "morot"], { kc: 40, w: 80, wd: 160 }],
+  [["paprika"], { kc: 30, w: 150, wd: 150 }],
+  [["körsbärstomater", "cocktailtomater"], { kc: 20, wp: 250, wd: 250 }],
+  [["tomat"], { kc: 20, w: 100, wd: 200 }],
+  [["gurka"], { kc: 12, w: 350, wd: 350 }],
+  [["isbergssallad", "sallad", "ruccola", "romansallad"], { kc: 15, w: 400, wp: 70, wd: 200 }],
+  [["broccoli"], { kc: 35, w: 400, wd: 400 }],
+  [["blomkål"], { kc: 25, w: 600, wd: 600 }],
+  [["vitkål", "spetskål", "kål"], { kc: 25, w: 800, wd: 300 }],
+  [["spenat", "grönkål"], { kc: 25, wp: 200, wd: 200 }],
+  [["champinjon", "svamp"], { kc: 25, wp: 250, wd: 250 }],
+  [["zucchini", "squash", "aubergine"], { kc: 17, w: 300, wd: 300 }],
+  [["avokado"], { kc: 200, w: 150, wd: 150 }],
+  [["citron", "lime"], { kc: 30, w: 100, wd: 50 }],
+  [["ingefära"], { kc: 80, w: 30, wd: 20 }],
+  [["chili"], { kc: 40, w: 15, wd: 15 }],
+  [["rödbetor"], { kc: 50, wp: 300, wd: 300 }],
+  [["dill", "persilja", "basilika", "koriander", "gräslök", "örter", "mynta"], { kc: 30, w: 20, wd: 15 }],
+  [["selleri", "fänkål", "palsternacka", "rotselleri", "rotfrukter"], { kc: 25, w: 300, wd: 200 }],
+  [["äpple", "banan", "päron"], { kc: 55, w: 150, wd: 150 }],
+];
+const UNKNOWN_KCAL = 150; // gissning för ingredienser som inte finns i listan
+export const PORTIONS = 4;
+
+function findKcal(name) {
+  const n = String(name || "").toLowerCase();
+  for (const [kws, k] of K) if (kws.some(x => n.includes(x))) return k;
+  return null;
+}
+
+export function ingredientKcal(ing) {
+  const k = findKcal(ing.n);
+  if (!k) return { kcal: UNKNOWN_KCAL, known: false };
+  const a = parseAmount(ing.m);
+  let g;
+  if (!a) g = k.wd;
+  else {
+    const x = a.q * a.f;
+    if (a.unit === "kg") g = x * 1000;
+    else if (a.unit === "l" || a.unit === "sp") g = x * 1000 * (k.d ?? 1);
+    else if (a.unit === "pkg") g = x * (k.wp ?? k.w ?? k.wd);
+    else if (a.unit === "port") g = x * (k.port ? k.port * 1000 : k.wd / PORTIONS);
+    else if (a.unit === "klyfta") g = x * 5;
+    else g = x * (k.w ?? k.wp ?? 100);
+  }
+  return { kcal: (g || 0) * k.kc / 100, known: true };
+}
+
+// Uppskattade kalorier per portion (rätten antas räcka till 4 portioner).
+export function estimateKcal(ingredients) {
+  const rows = (ingredients || []).filter(i => i && i.n).map(i => ({ n: i.n, m: i.m, ...ingredientKcal(i) }));
+  const total = rows.reduce((a, r) => a + r.kcal, 0);
+  return { perPortion: rows.length ? Math.round(total / PORTIONS / 10) * 10 : 0, rows, unknown: rows.filter(r => !r.known).length };
+}
+
+// Nyttighet 1–5: färre kalorier per portion ger fler stjärnor.
+export function healthStars(kcalPerPortion) {
+  if (!kcalPerPortion) return 0;
+  if (kcalPerPortion <= 450) return 5;
+  if (kcalPerPortion <= 575) return 4;
+  if (kcalPerPortion <= 700) return 3;
+  if (kcalPerPortion <= 850) return 2;
+  return 1;
+}

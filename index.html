@@ -154,6 +154,16 @@ select.field{flex:0 0 auto;max-width:42%}
 .total b{font:700 1.25rem var(--display);font-variant-numeric:tabular-nums}
 .total span{font-size:.85rem;color:var(--muted)}
 .addrow .pricein{flex:0 0 92px;min-width:0}
+.stars{letter-spacing:1px;font-size:.85rem;white-space:nowrap}
+.stars.health{color:var(--accent)}
+.stars.taste{color:var(--mark)}
+.stars .off{color:var(--line)}
+.rate{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--muted);margin-top:3px;align-items:center}
+.rate > span{display:inline-flex;gap:4px;align-items:center}
+.starpick{display:flex;gap:2px}
+.starpick button{border:0;background:none;font-size:1.9rem;line-height:1;padding:2px 4px;color:var(--line)}
+.starpick button.on{color:var(--mark)}
+.sortsel{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:.85rem}
 .est{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .est details summary{cursor:pointer}
 .est details .hint{margin-top:4px;line-height:1.6}
@@ -261,7 +271,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signI
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "./config.js";
 import { SEED_DISHES } from "./seed.js";
-import { estimateDish } from "./prices.js";
+import { estimateDish, estimateKcal, healthStars } from "./prices.js";
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -271,6 +281,11 @@ const kr = n => Math.round(n).toLocaleString("sv-SE") + " kr";
 const toPrice = v => { const n = Math.round(Number(String(v ?? "").replace(/\s/g, "").replace(",", "."))); return Number.isFinite(n) && n > 0 ? n : null; };
 const SEED_COST = Object.fromEntries(SEED_DISHES.map(d => [d.id, d.cost]));
 // Pris för en rätt: det ni själva angett, annars starträttens pris, annars en uppskattning från ingredienserna.
+const dishKcal = d => d ? estimateKcal(d.ingredients).perPortion : 0;
+const dishHealth = d => healthStars(dishKcal(d));
+const dishTaste = d => (d && Number.isInteger(d.taste) && d.taste >= 1 && d.taste <= 5) ? d.taste : 0;
+// Fem stjärnor där n är ifyllda; kind styr färgen (nyttig eller gott).
+const stars = (n, kind) => `<span class="stars ${kind}" aria-label="${n} av 5">${"★".repeat(n)}<span class="off">${"★".repeat(5 - n)}</span></span>`;
 const dishCost = d => {
   if (!d) return null;
   if (typeof d.cost === "number") return d.cost;
@@ -674,7 +689,7 @@ function openPicker(k, which){
     const draw = () => {
       const q = norm($("#pkSearch").value);
       const ds = S.dishes.filter(x => !q || norm(x.name).includes(q) || (x.ingredients||[]).some(i => norm(i.n).includes(q)));
-      $("#pkList").innerHTML = ds.length ? ds.map(x => `<div class="dish" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`).join("")
+      $("#pkList").innerHTML = ds.length ? ds.map(x => `<div class="dish" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div><div class="rate"><span>Nyttig ${stars(dishHealth(x), "health")}</span><span>Gott ${stars(dishTaste(x), "taste")}</span></div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`).join("")
         : `<div class="dish" style="cursor:default"><div class="t sub">Ingen rätt matchar. Tryck på "Använd det jag skrev" eller skapa rätten under Rätter.</div></div>`;
     };
     draw();
@@ -703,11 +718,17 @@ function renderDishes(){
   if (!S.dishes.length){
     $("#dishList").innerHTML = `<div class="empty"><strong>Inga rätter än</strong>Tryck på "Ny rätt" och skriv in en rätt ni brukar laga, med ingredienserna rad för rad.<div style="margin-top:12px"><button class="btn" data-seed="1" type="button">Lägg in ${SEED_DISHES.length} starträtter</button></div></div>`; return;
   }
-  $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span></div>` +
-    (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", ")) || "Inga ingredienser"}</div></div><span class="price${dishCost(x) ? "" : " none"}">${dishCost(x) ? "≈ " + kr(dishCost(x)) : "inget pris"}</span></div>`).join("") + `</div>`
+  const by = { taste: x => -dishTaste(x), health: x => dishKcal(x) || 1e9, cost: x => dishCost(x) || 1e9 }[S.dishSort];
+  if (by) ds.sort((a, b) => by(a) - by(b) || a.name.localeCompare(b.name, "sv"));
+  $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span>
+      <select class="sortsel" id="dishSort" aria-label="Sortera">${[["name","Sortera: Namn"],["taste","Godast först"],["health","Nyttigast först"],["cost","Billigast först"]].map(([k,n]) => `<option value="${k}"${(S.dishSort || "name") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>` +
+    (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", ")) || "Inga ingredienser"}</div>
+      <div class="rate"><span>Nyttig ${stars(dishHealth(x), "health")}${dishKcal(x) ? ` ${dishKcal(x)} kcal` : ""}</span><span>Gott ${stars(dishTaste(x), "taste")}</span></div></div><span class="price${dishCost(x) ? "" : " none"}">${dishCost(x) ? "≈ " + kr(dishCost(x)) : "inget pris"}</span></div>`).join("") + `</div>`
       : `<div class="empty">Ingen rätt matchar "${esc(S.search)}".</div>`);
 }
 $("#dishSearch").addEventListener("input", e => { S.search = e.target.value; renderDishes(); });
+try { S.dishSort = localStorage.getItem("kp-dishsort") || "name"; } catch { S.dishSort = "name"; }
+$("#dishList").addEventListener("change", e => { if (e.target.id !== "dishSort") return; S.dishSort = e.target.value; try { localStorage.setItem("kp-dishsort", S.dishSort); } catch {} renderDishes(); });
 $("#newDish").addEventListener("click", () => editDish(null));
 $("#dishList").addEventListener("click", async e => {
   const sb = e.target.closest("[data-seed]");
@@ -731,6 +752,8 @@ function editDish(id){
         <div class="hint">Skriv mängden efter ett kommatecken om ni vill, t.ex. "Köttfärs, 500 g".</div></div>
       <div><label class="l" for="dCost">Ungefärlig kostnad för hela rätten (kr)</label><input class="field" style="width:100%" id="dCost" type="number" inputmode="numeric" min="0" step="1" value="${d && typeof d.cost === "number" ? d.cost : d && d.cost === undefined && SEED_COST[d.id] ? SEED_COST[d.id] : ""}" placeholder="Lämna tomt för att använda förslaget">
         <div class="est" id="dEst"></div></div>
+      <div><span class="l">Hur gott tycker ni att det är?</span><div class="starpick" id="dTaste" role="group" aria-label="Betyg för hur gott">${[1,2,3,4,5].map(n => `<button type="button" data-t="${n}" aria-label="${n} av 5">★</button>`).join("")}</div></div>
+      <div><span class="l">Nyttighet (räknas ut av appen)</span><div id="dHealth" class="hint"></div></div>
       <div class="spread">
         ${d ? `<button type="button" class="btn danger small" id="dDel">Ta bort rätten</button>` : "<span></span>"}
         <div class="row"><button type="button" class="btn ghost" id="dCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
@@ -747,10 +770,19 @@ function editDish(id){
       $("#dUseEst").addEventListener("click", () => { $("#dCost").value = e.total; });
     };
     drawEst();
-    $("#dIng").addEventListener("input", drawEst);
+    let taste = dishTaste(d);
+    const drawTaste = () => { for (const b of $("#dTaste").children) b.classList.toggle("on", Number(b.dataset.t) <= taste); };
+    drawTaste();
+    $("#dTaste").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; const n = Number(b.dataset.t); taste = taste === n ? 0 : n; drawTaste(); });
+    const drawHealth = () => {
+      const k = estimateKcal(textToIng($("#dIng").value));
+      $("#dHealth").innerHTML = k.perPortion ? `${stars(healthStars(k.perPortion), "health")} ≈ ${k.perPortion} kcal per portion (4 portioner)${k.unknown ? ` · ${k.unknown} gissade` : ""}` : "Skriv in ingredienserna så räknar appen ut det.";
+    };
+    drawHealth();
+    $("#dIng").addEventListener("input", () => { drawEst(); drawHealth(); });
     $("#dishForm").addEventListener("submit", async e => {
       e.preventDefault();
-      const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), cost: toPrice($("#dCost").value), builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
+      const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), cost: toPrice($("#dCost").value), taste: taste || null, builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
       if (!body.name) return;
       closeSheet();
       try { if (d) await db.doc("dishes/" + d.id).set(body); else await db.collection("dishes").add(body); toast("Rätten är sparad"); }
