@@ -154,6 +154,9 @@ select.field{flex:0 0 auto;max-width:42%}
 .total b{font:700 1.25rem var(--display);font-variant-numeric:tabular-nums}
 .total span{font-size:.85rem;color:var(--muted)}
 .addrow .pricein{flex:0 0 92px;min-width:0}
+.est{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.est details summary{cursor:pointer}
+.est details .hint{margin-top:4px;line-height:1.6}
 
 /* Ark (bottom sheet) */
 .scrim{position:fixed;inset:0;background:rgba(10,16,13,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
@@ -258,6 +261,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signI
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "./config.js";
 import { SEED_DISHES } from "./seed.js";
+import { estimateDish } from "./prices.js";
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -266,8 +270,13 @@ const cap = s => { s = String(s || "").trim(); return s ? s[0].toUpperCase() + s
 const kr = n => Math.round(n).toLocaleString("sv-SE") + " kr";
 const toPrice = v => { const n = Math.round(Number(String(v ?? "").replace(/\s/g, "").replace(",", "."))); return Number.isFinite(n) && n > 0 ? n : null; };
 const SEED_COST = Object.fromEntries(SEED_DISHES.map(d => [d.id, d.cost]));
-// Pris för en rätt: det ni själva angett, annars uppskattningen för starträtten.
-const dishCost = d => d ? (typeof d.cost === "number" ? d.cost : (d.cost === null ? null : SEED_COST[d.id] ?? null)) : null;
+// Pris för en rätt: det ni själva angett, annars starträttens pris, annars en uppskattning från ingredienserna.
+const dishCost = d => {
+  if (!d) return null;
+  if (typeof d.cost === "number") return d.cost;
+  if (d.cost === undefined && SEED_COST[d.id]) return SEED_COST[d.id];
+  return estimateDish(d.ingredients).total || null;
+};
 
 /* ---------- Kategorier ---------- */
 const CATS = [
@@ -720,8 +729,8 @@ function editDish(id){
       <div><label class="l" for="dIng">Ingredienser, en per rad</label>
         <textarea class="field" id="dIng" placeholder="Kycklingfilé, 600 g&#10;Ris, 4 port&#10;Gul lök&#10;Matlagningsgrädde, 2 dl">${esc(d ? ingToText(d.ingredients) : "")}</textarea>
         <div class="hint">Skriv mängden efter ett kommatecken om ni vill, t.ex. "Köttfärs, 500 g".</div></div>
-      <div><label class="l" for="dCost">Ungefärlig kostnad för hela rätten (kr)</label><input class="field" style="width:100%" id="dCost" type="number" inputmode="numeric" min="0" step="1" value="${dishCost(d) || ""}" placeholder="t.ex. 120">
-        <div class="hint">Ungefär vad ingredienserna kostar för en middag till familjen.</div></div>
+      <div><label class="l" for="dCost">Ungefärlig kostnad för hela rätten (kr)</label><input class="field" style="width:100%" id="dCost" type="number" inputmode="numeric" min="0" step="1" value="${d && typeof d.cost === "number" ? d.cost : d && d.cost === undefined && SEED_COST[d.id] ? SEED_COST[d.id] : ""}" placeholder="Lämna tomt för att använda förslaget">
+        <div class="est" id="dEst"></div></div>
       <div class="spread">
         ${d ? `<button type="button" class="btn danger small" id="dDel">Ta bort rätten</button>` : "<span></span>"}
         <div class="row"><button type="button" class="btn ghost" id="dCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
@@ -729,6 +738,16 @@ function editDish(id){
     </form>`, () => {
     if (!d) $("#dName").focus();
     $("#dCancel").addEventListener("click", closeSheet);
+    const drawEst = () => {
+      const e = estimateDish(textToIng($("#dIng").value));
+      if (!e.rows.length){ $("#dEst").innerHTML = `<div class="hint">Skriv in ingredienserna så föreslår appen ett pris.</div>`; return; }
+      $("#dEst").innerHTML = `<div class="spread"><span class="hint">Förslag utifrån ingredienserna: <b>≈ ${kr(e.total)}</b>${e.unknown ? ` · ${e.unknown} gissade` : ""}</span>
+        <button type="button" class="btn ghost small" id="dUseEst">Använd förslaget</button></div>
+        <details><summary class="hint">Visa uträkningen</summary><div class="hint">${e.rows.map(r => `${esc(r.n)}${r.m ? " (" + esc(r.m) + ")" : ""}: ${r.known ? "" : "gissat "}${kr(r.cost)}`).join("<br>")}</div></details>`;
+      $("#dUseEst").addEventListener("click", () => { $("#dCost").value = e.total; });
+    };
+    drawEst();
+    $("#dIng").addEventListener("input", drawEst);
     $("#dishForm").addEventListener("submit", async e => {
       e.preventDefault();
       const body = { name: cap($("#dName").value), ingredients: textToIng($("#dIng").value), cost: toPrice($("#dCost").value), builtin: d ? !!d.builtin : false, updatedAt: Date.now() };
