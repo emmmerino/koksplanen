@@ -53,6 +53,13 @@ const TRIVIAL = new Set(["salt", "peppar", "svartpeppar", "olja", "olivolja", "r
   "socker", "vetemjöl", "gul lök", "vitlök", "kryddor", "oregano", "curry", "chilipulver", "paprikapulver"]);
 export const isTrivial = key => TRIVIAL.has(key);
 
+// Varor som de flesta alltid har hemma. De räknas inte när appen letar rätter som
+// passar ihop, eftersom det är varor man ändå inte köper extra av.
+const PANTRY = ["pasta", "spaghetti", "makaroner", "penne", "ris", "ägg", "mjölk", "potatis", "krossade tomater",
+  "tomatpuré", "buljong", "fond", "soja", "ketchup", "senap", "kryddor", "riven ost", "sylt", "lingonsylt",
+  "sirap", "vinäger", "ströbröd", "honung", "sambal oelek", "curry", "bröd"];
+export const isPantry = key => isTrivial(key) || PANTRY.some(p => key === p || key.endsWith(p) && p.length > 4);
+
 const UNITS = {
   kg: ["g", 1000], hg: ["g", 100], g: ["g", 1], gram: ["g", 1],
   l: ["ml", 1000], liter: ["ml", 1000], dl: ["ml", 100], cl: ["ml", 10], ml: ["ml", 1],

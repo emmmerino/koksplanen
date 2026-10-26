@@ -177,6 +177,9 @@ select.field{flex:0 0 auto;max-width:42%}
 .shared{font-size:.78rem;color:var(--accent);font-weight:600;margin-top:2px}
 .pkhead{font:600 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);padding:10px 12px 6px;border-top:1px solid var(--line)}
 .pkhead:first-child{border-top:0}
+.havebox{margin-top:10px}
+.havebox summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:.9rem;padding:8px 2px}
+.havebox .list{margin-top:4px}
 .est{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .est details summary{cursor:pointer}
 .est details .hint{margin-top:4px;line-height:1.6}
@@ -284,9 +287,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "./config.js";
-import { SEED_DISHES } from "./seed.js";
-import { estimateDish, estimateKcal, healthStars } from "./prices.js";
-import { canonical, sumAmounts, isTrivial } from "./ingredients.js";
+import { SEED_DISHES, MORE_DISHES } from "./seed.js";
+import { estimateDish, estimateKcal, healthStars, ingredientCost } from "./prices.js";
+import { canonical, sumAmounts, isTrivial, isPantry } from "./ingredients.js";
 (() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -620,7 +623,8 @@ function renderWeekCost(ds){
 }
 
 /* Rätter som delar varor med veckans val, så att det blir mindre över */
-const dishKeys = d => new Set((d.ingredients || []).map(i => canonical(i.n)).filter(c => c.key && !isTrivial(c.key)).map(c => c.key));
+// Bara varor man inte alltid har hemma räknas (nötfärs och fiskpinnar, inte pasta och ägg).
+const dishKeys = d => new Set((d.ingredients || []).map(i => canonical(i.n)).filter(c => c.key && !isPantry(c.key)).map(c => c.key));
 function weekPairs(){
   const chosen = new Set(), keys = new Map();
   for (const d of weekDates()){
@@ -632,18 +636,21 @@ function weekPairs(){
   const out = new Map();
   for (const d of S.dishes){
     if (chosen.has(d.id)) continue;
-    const shared = [...dishKeys(d)].filter(k => keys.has(k)).map(k => keys.get(k));
-    if (shared.length) out.set(d.id, shared);
+    const shared = [...dishKeys(d)].filter(k => keys.has(k));
+    if (!shared.length) continue;
+    // Dyrare varor väger tyngre: att dela nötfärs är värt mer än att dela en gurka.
+    const score = shared.reduce((a, k) => a + ingredientCost({ n: keys.get(k) }).cost, 0);
+    out.set(d.id, { shared: shared.map(k => keys.get(k)), score });
   }
   return out;
 }
-const topPairs = (pairs, n) => [...pairs].sort((a, b) => b[1].length - a[1].length || dishTaste(dishById(b[0])) - dishTaste(dishById(a[0]))).slice(0, n);
+const topPairs = (pairs, n) => [...pairs].filter(([, p]) => p.score >= 15).sort((a, b) => b[1].score - a[1].score || dishTaste(dishById(b[0])) - dishTaste(dishById(a[0]))).slice(0, n);
 function renderPairs(){
   const el = $("#pairs"), top = topPairs(weekPairs(), 3);
   const free = weekDates().map(keyOf).find(k => !(S.days[k] && S.days[k].dinner));
   el.hidden = !top.length || !free;
   if (el.hidden) return;
-  el.innerHTML = `<h3>Passar ihop med veckans rätter</h3><div class="opts">` + top.map(([id, shared]) => `<button type="button" data-pair="${esc(id)}"><span><b>${esc(dishById(id).name)}</b><small>Delar ${esc(shared.join(", ").toLowerCase())}</small></span><span class="add">+ Lägg till</span></button>`).join("") + `</div>`;
+  el.innerHTML = `<h3>Passar ihop med veckans rätter</h3><div class="opts">` + top.map(([id, p]) => `<button type="button" data-pair="${esc(id)}"><span><b>${esc(dishById(id).name)}</b><small>Delar ${esc(p.shared.join(", ").toLowerCase())}</small></span><span class="add">+ Lägg till</span></button>`).join("") + `</div>`;
 }
 $("#pairs").addEventListener("click", e => {
   const b = e.target.closest("[data-pair]"); if (!b) return;
@@ -696,14 +703,19 @@ function renderIngredients(){
   const got = list.filter(e => have.has(e.key)).length;
   $("#ingSub").textContent = `${list.length} varor från ${dishesCount} rätter · ${n} valda${got ? ` · ${got} har ni redan` : ""}`;
   $("#ingAdd").disabled = !n; $("#ingAdd").textContent = n ? `Lägg ${n} på listan` : "Lägg på listan";
-  $("#ingList").innerHTML = `<div class="list">` + list.map(e => {
+  const row = e => {
     const on = ingChecked(e), already = openItem(e.name), st = isStaple(e.name), h = have.has(e.key);
     return `<label class="ing${on ? "" : " off"}${h ? " got" : ""}"><input type="checkbox" data-ing="${esc(e.key)}" ${on ? "checked" : ""}${h ? " disabled" : ""}>
       <div class="t"><div><b>${esc(e.name)}</b>${h ? `<span class="tag">har redan</span>` : already ? `<span class="tag">på listan</span>` : st ? `<span class="tag">basvara</span>` : ""}</div>
       ${e.total ? `<div class="amt">${esc(e.total)}</div>` : ""}
       <div class="why">${esc([...e.dishes].join(", "))}</div></div>
       <button type="button" class="have" data-have="${esc(e.key)}" aria-pressed="${h}">${h ? "Ångra" : "Har redan"}</button></label>`;
-  }).join("") + `</div>`;
+  };
+  // Det ni redan har samlas längst ner i en ihopfälld rad.
+  const need = list.filter(e => !have.has(e.key)), gotList = list.filter(e => have.has(e.key));
+  $("#ingList").innerHTML = (need.length ? `<div class="list">${need.map(row).join("")}</div>` : `<div class="empty" style="margin-top:0">Ni har allt som behövs för veckans rätter.</div>`) +
+    (gotList.length ? `<details class="havebox"${S.haveOpen ? " open" : ""}><summary>Har redan hemma (${gotList.length})</summary><div class="list">${gotList.map(row).join("")}</div></details>` : "");
+  const det = $("#ingList .havebox"); if (det) det.addEventListener("toggle", () => { S.haveOpen = det.open; });
 }
 $("#ingList").addEventListener("click", async e => {
   const b = e.target.closest("[data-have]"); if (!b) return;
@@ -756,7 +768,7 @@ function openPicker(k, which){
       const q = norm($("#pkSearch").value);
       const ds = S.dishes.filter(x => !q || norm(x.name).includes(q) || (x.ingredients||[]).some(i => norm(i.n).includes(q)));
       const pairs = weekPairs();
-      const row = (x, hl) => `<div class="dish${hl ? " pair" : ""}" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div>${pairs.has(x.id) ? `<div class="shared">Delar ${esc(pairs.get(x.id).join(", ").toLowerCase())} med veckan</div>` : ""}<div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div><div class="rate"><span>Nyttig ${stars(dishHealth(x), "health")}</span><span>Gott ${stars(dishTaste(x), "taste")}</span></div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`;
+      const row = (x, hl) => `<div class="dish${hl ? " pair" : ""}" data-pick="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div>${pairs.has(x.id) ? `<div class="shared">Delar ${esc(pairs.get(x.id).shared.join(", ").toLowerCase())} med veckan</div>` : ""}<div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div><div class="rate"><span>Nyttig ${stars(dishHealth(x), "health")}</span><span>Gott ${stars(dishTaste(x), "taste")}</span></div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`;
       const top = q ? [] : topPairs([...pairs].filter(([id]) => ds.some(x => x.id === id)), 4).map(([id]) => dishById(id));
       $("#pkList").innerHTML = ds.length ? (top.length ? `<div class="pkhead">Passar ihop med veckans rätter</div>` + top.map(x => row(x, true)).join("") + `<div class="pkhead">Alla rätter</div>` : "") + ds.map(x => row(x, false)).join("")
         : `<div class="dish" style="cursor:default"><div class="t sub">Ingen rätt matchar. Tryck på "Använd det jag skrev" eller skapa rätten under Rätter.</div></div>`;
@@ -789,7 +801,10 @@ function renderDishes(){
   }
   const by = { taste: x => -dishTaste(x), health: x => estimateKcal(x.ingredients).density || 1e9, cost: x => dishCost(x) || 1e9 }[S.dishSort];
   if (by) ds.sort((a, b) => by(a) - by(b) || a.name.localeCompare(b.name, "sv"));
-  $("#dishList").innerHTML = `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span>
+  const missing = MORE_DISHES.filter(m => !S.dishes.some(x => x.id === m.id));
+  const moreDone = S.meta && S.meta.seeds && S.meta.seeds.more;
+  const moreBtn = missing.length && !moreDone ? `<div class="pairs" style="margin:0 0 12px"><h3>Fler rätter</h3><div class="spread"><span class="hint">${missing.length} vardagsrätter med vanliga ingredienser, till exempel ${esc(missing.slice(0, 3).map(m => m.name.toLowerCase()).join(", "))}.</span><button class="btn small" data-more="1" type="button">Lägg till ${missing.length} rätter</button></div></div>` : "";
+  $("#dishList").innerHTML = moreBtn + `<div class="spread" style="margin:0 2px 8px"><span class="count">${ds.length} av ${S.dishes.length} rätter</span>
       <select class="sortsel" id="dishSort" aria-label="Sortera">${[["name","Sortera: Namn"],["taste","Godast först"],["health","Nyttigast först"],["cost","Billigast först"]].map(([k,n]) => `<option value="${k}"${(S.dishSort || "name") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>` +
     (ds.length ? `<div class="list">` + ds.map(x => `<div class="dish" data-dish="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}${x.builtin ? "" : `<span class="tag">egen</span>`}</div><div class="i">${esc((x.ingredients||[]).map(i => i.m ? `${i.n} ${i.m}` : i.n).join(", ")) || "Inga ingredienser"}</div>
       <div class="rate"><span>Nyttig ${stars(dishHealth(x), "health")}${dishKcal(x) ? ` ${dishKcal(x)} kcal` : ""}</span><span>Gott ${stars(dishTaste(x), "taste")}</span></div></div><span class="price${dishCost(x) ? "" : " none"}">${dishCost(x) ? "≈ " + kr(dishCost(x)) : "inget pris"}</span></div>`).join("") + `</div>`
@@ -800,6 +815,16 @@ try { S.dishSort = localStorage.getItem("kp-dishsort") || "name"; } catch { S.di
 $("#dishList").addEventListener("change", e => { if (e.target.id !== "dishSort") return; S.dishSort = e.target.value; try { localStorage.setItem("kp-dishsort", S.dishSort); } catch {} renderDishes(); });
 $("#newDish").addEventListener("click", () => editDish(null));
 $("#dishList").addEventListener("click", async e => {
+  const mb = e.target.closest("[data-more]");
+  if (mb){
+    mb.disabled = true;
+    const b = writeBatch(fsRef);
+    const missing = MORE_DISHES.filter(m => !S.dishes.some(x => x.id === m.id));
+    for (const d of missing) b.set(doc(fsRef, "dishes", d.id), { name: d.name, ingredients: d.ingredients, builtin: true, updatedAt: Date.now() });
+    b.set(doc(fsRef, "meta", "seeds"), { more: true, updatedAt: Date.now() });
+    try { await b.commit(); toast(`${missing.length} nya rätter är inlagda`); } catch(err){ showErr(err); mb.disabled = false; }
+    return;
+  }
   const sb = e.target.closest("[data-seed]");
   if (sb){
     sb.disabled = true;
@@ -921,6 +946,7 @@ if (!FIREBASE_CONFIG){
     };
     unsubs.push(db.collection("items").onSnapshot(s => { S.items = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); ready(); }, onErr));
     unsubs.push(db.collection("dishes").onSnapshot(s => { S.dishes = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name, "sv")); render(); ready(); }, onErr));
+    unsubs.push(db.collection("meta").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.meta = o; render(); }, onErr));
     unsubs.push(db.collection("weeks").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.weeks = o; render(); }, onErr));
     unsubs.push(db.collection("wishes").onSnapshot(s => { S.wishes = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr));
     unsubs.push(db.collection("days").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.days = o; render(); ready(); }, onErr));
