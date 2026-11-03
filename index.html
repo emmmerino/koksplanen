@@ -180,6 +180,16 @@ select.field{flex:0 0 auto;max-width:42%}
 .havebox{margin-top:10px}
 .havebox summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:.9rem;padding:8px 2px}
 .havebox .list{margin-top:4px}
+.speed{display:flex;align-items:center;gap:12px;border-radius:var(--r);padding:12px 14px;margin-bottom:12px;background:var(--mark-soft);color:var(--mark-ink)}
+.speed .bolt{font-size:1.4rem;line-height:1}
+.speed .t{flex:1;min-width:0}
+.speed .t b{display:block;font:700 1.02rem var(--display);color:var(--ink)}
+.speed .t small{font-size:.8rem}
+.speed.missing{border:2px dashed var(--mark);background:transparent}
+.slot .zap{color:var(--mark);margin-right:4px}
+.pkspeed{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid var(--mark);background:var(--mark-soft);color:var(--ink);border-radius:var(--r);padding:12px 14px}
+.pkspeed b{font:700 1rem var(--display)}
+.pkspeed small{display:block;font-size:.8rem;color:var(--muted)}
 .est{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .est details summary{cursor:pointer}
 .est details .hint{margin-top:4px;line-height:1.6}
@@ -248,6 +258,7 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
       <button class="btn ghost small" id="fillRandom">Slumpa tomma middagar</button>
       <button class="btn ghost small" id="allRester">Rester till alla luncher</button>
     </div>
+    <div id="speed"></div>
     <div class="list" id="days"></div>
     <div class="total" id="weekCost" hidden></div>
     <div class="pairs" id="pairs" hidden></div>
@@ -573,9 +584,10 @@ function renderPlan(){
           <button class="slot${ln ? " set" : ""}${isR ? " rester" : ""}" data-w="lunch">${ln ? esc(ln) : "Välj lunch"}</button>
           <button class="rq" data-r="1" aria-pressed="${isR}">Rester</button></div>
         <div class="meal"><span class="k">Middag</span>
-          <button class="slot${dn ? " set" : ""}" data-w="dinner">${dn ? esc(dn) : "Välj middag"}</button></div>
+          <button class="slot${dn ? " set" : ""}" data-w="dinner">${day.dinner && day.dinner.speed ? `<span class="zap" aria-label="Speed dinner">⚡</span>` : ""}${dn ? esc(dn) : "Välj middag"}</button></div>
       </div></div>`;
   }).join("");
+  renderSpeed();
   renderWeekCost(ds);
   renderPairs();
   renderIngredients();
@@ -620,6 +632,62 @@ function renderWeekCost(ds){
   }
   const el = $("#weekCost"); el.hidden = !n;
   el.innerHTML = `<span>Uppskattad matkostnad för ${n} ${n === 1 ? "måltid" : "måltider"}${missing ? ` · ${missing} utan pris` : ""}</span><b>≈ ${kr(sum)}</b>`;
+}
+
+/* Speed dinner: en reservrätt som alltid ska vara vald. Används den måste en ny väljas. */
+const speedDish = () => { const id = S.meta && S.meta.speed && S.meta.speed.dishId; return id ? dishById(id) : null; };
+function renderSpeed(){
+  const el = $("#speed"), d = speedDish();
+  el.innerHTML = d
+    ? `<div class="speed"><span class="bolt" aria-hidden="true">⚡</span><div class="t"><small>Speed dinner, er reserv när tiden inte räcker</small><b>${esc(d.name)}</b></div><button class="btn ghost small" type="button" data-speed="change">Byt</button></div>`
+    : `<div class="speed missing"><span class="bolt" aria-hidden="true">⚡</span><div class="t"><b>Ingen speed dinner vald</b><small>Välj en reservrätt för dagar då det blir ont om tid.</small></div><button class="btn small" type="button" data-speed="change">Välj</button></div>`;
+}
+$("#speed").addEventListener("click", e => { if (e.target.closest("[data-speed]")) openSpeedPicker(false); });
+// Tvinga fram ett val när speed dinner saknas och det finns rätter att välja bland.
+function ensureSpeed(){
+  if (S.view !== "plan" || !S.metaLoaded || !S.dishes.length || speedDish() || $("#sheetHost").innerHTML) return;
+  openSpeedPicker(true);
+}
+async function useSpeed(k){
+  const d = speedDish(); if (!d) return;
+  closeSheet();
+  await saveMeal(k, { type: "dish", dishId: d.id, speed: true }, "dinner");
+  S.meta.speed = { dishId: null };
+  openSpeedPicker(true, d.id);
+  await db.doc("meta/speed").set({ dishId: null, usedAt: Date.now(), lastDishId: d.id }).catch(showErr);
+}
+function openSpeedPicker(forced, justUsed){
+  S.meta = S.meta || {};
+  const cur = speedDish();
+  openSheet(`<h2>${justUsed ? "Välj en ny speed dinner" : "Välj speed dinner"}</h2>
+    <p class="hint" style="margin:-4px 0 12px">${justUsed ? "Ni använde er speed dinner. Välj en ny reserv innan ni går vidare." : forced ? "Ni behöver alltid ha en reservrätt för dagar när det blir ont om tid. Välj en som går snabbt att laga." : "Reservrätten ni lagar när tiden inte räcker. Ha varorna hemma."}</p>
+    <div class="stack">
+      <input class="field" id="spSearch" placeholder="Sök rätt" autocomplete="off">
+      <label class="row" style="gap:8px;font-size:.9rem"><input type="checkbox" id="spAdd" checked style="width:18px;height:18px;accent-color:var(--accent)"> Lägg varorna på handlingslistan</label>
+      <div class="list" id="spList"></div>
+      ${forced ? "" : `<div class="row" style="justify-content:flex-end"><button class="btn ghost" type="button" id="spCancel">Avbryt</button></div>`}
+    </div>`, sheet => {
+    const draw = () => {
+      const q = norm($("#spSearch").value);
+      const ds = S.dishes.filter(x => x.id !== justUsed && (!q || norm(x.name).includes(q)));
+      $("#spList").innerHTML = ds.map(x => `<div class="dish${cur && cur.id === x.id ? " pair" : ""}" data-sp="${esc(x.id)}"><div class="t"><div class="n">${esc(x.name)}</div><div class="i">${esc((x.ingredients||[]).map(i => i.n).join(", "))}</div></div>${dishCost(x) ? `<span class="count">≈ ${kr(dishCost(x))}</span>` : ""}</div>`).join("")
+        || `<div class="dish" style="cursor:default"><div class="t sub">Ingen rätt matchar.</div></div>`;
+    };
+    draw();
+    $("#spSearch").addEventListener("input", draw);
+    const c = $("#spCancel"); if (c) c.addEventListener("click", closeSheet);
+    sheet.addEventListener("click", async e => {
+      const r = e.target.closest("[data-sp]"); if (!r) return;
+      const d = dishById(r.dataset.sp), add = $("#spAdd").checked;
+      closeSheet();
+      S.meta.speed = { dishId: d.id };
+      await db.doc("meta/speed").set({ dishId: d.id, setAt: Date.now() }).catch(showErr);
+      let n = 0;
+      if (add) for (const i of d.ingredients || []){ if (!isStaple(i.n) && !isPantry(canonical(i.n).key) && await addItem(canonical(i.n).name, i.m || "", "", "speed")) n++; }
+      toast(`${d.name} är er speed dinner${n ? ` · ${n} varor på listan` : ""}`);
+      render();
+    });
+  }, forced);
 }
 
 /* Rätter som delar varor med veckans val, så att det blir mindre över */
@@ -741,15 +809,18 @@ $("#ingAdd").addEventListener("click", async () => {
 });
 
 /* ---------- Ark ---------- */
-function openSheet(html, onMount){
+// locked = arket går inte att stänga genom att trycka utanför eller med Esc.
+let sheetLocked = false;
+function openSheet(html, onMount, locked = false){
   const host = $("#sheetHost");
+  sheetLocked = locked;
   host.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
   const scrim = host.firstElementChild;
-  scrim.addEventListener("click", e => { if (e.target === scrim) closeSheet(); });
+  scrim.addEventListener("click", e => { if (e.target === scrim && !sheetLocked) closeSheet(); });
   onMount && onMount(scrim.firstElementChild);
 }
-function closeSheet(){ $("#sheetHost").innerHTML = ""; }
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+function closeSheet(){ sheetLocked = false; $("#sheetHost").innerHTML = ""; }
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetLocked) closeSheet(); });
 
 function openPicker(k, which){
   const d = new Date(k + "T12:00:00");
@@ -762,6 +833,7 @@ function openPicker(k, which){
         <button class="btn ghost small" data-pk="text">Använd det jag skrev</button>
         <button class="btn ghost small" data-pk="clear">Töm</button>
       </div>
+      ${which === "dinner" && speedDish() ? `<button type="button" class="pkspeed" data-pk="speed"><span aria-hidden="true">⚡</span><span><b>Använd speed dinner: ${esc(speedDish().name)}</b><small>Sedan väljer ni en ny reserv</small></span></button>` : ""}
       <div class="list" id="pkList"></div>
     </div>`, sheet => {
     const draw = () => {
@@ -779,6 +851,7 @@ function openPicker(k, which){
       const p = e.target.closest("[data-pick]");
       if (p){ saveMeal(k, { type: "dish", dishId: p.dataset.pick }, which); return closeSheet(); }
       const b = e.target.closest("[data-pk]"); if (!b) return;
+      if (b.dataset.pk === "speed") return useSpeed(k);
       if (b.dataset.pk === "rester") saveMeal(k, { type: "rester" }, which);
       if (b.dataset.pk === "clear") saveMeal(k, null, which);
       if (b.dataset.pk === "text"){ const t = $("#pkSearch").value.trim(); if (!t) return $("#pkSearch").focus(); saveMeal(k, { type: "text", text: cap(t) }, which); }
@@ -892,6 +965,7 @@ function editDish(id){
 
 /* ---------- Render ---------- */
 function render(){
+  setTimeout(ensureSpeed);
   renderShop();
   if (S.view === "wish") renderWish();
   if (S.view === "plan") renderPlan();
@@ -946,7 +1020,7 @@ if (!FIREBASE_CONFIG){
     };
     unsubs.push(db.collection("items").onSnapshot(s => { S.items = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); ready(); }, onErr));
     unsubs.push(db.collection("dishes").onSnapshot(s => { S.dishes = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name, "sv")); render(); ready(); }, onErr));
-    unsubs.push(db.collection("meta").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.meta = o; render(); }, onErr));
+    unsubs.push(db.collection("meta").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.meta = o; S.metaLoaded = true; render(); }, onErr));
     unsubs.push(db.collection("weeks").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.weeks = o; render(); }, onErr));
     unsubs.push(db.collection("wishes").onSnapshot(s => { S.wishes = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr));
     unsubs.push(db.collection("days").onSnapshot(s => { const o = {}; for (const d of s.docs) o[d.id] = d.data(); S.days = o; render(); ready(); }, onErr));
