@@ -64,22 +64,24 @@ nav.tabs .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:re
 nav.tabs button{background:none;border:0;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-weight:600;font-size:.8rem}
 nav.tabs button svg{width:24px;height:24px}
 .who-pick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.who-pick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:.9rem;color:var(--ink)}
+.who-pick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px;min-height:40px;font-weight:600;font-size:.92rem;color:var(--ink)}
 .who-pick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-#wishFilter button{padding:5px 10px;font-size:.82rem;font-weight:500}
+#wishFilter button{padding:7px 12px;min-height:36px;font-size:.85rem;font-weight:500}
 #wishFilter{gap:4px}
 .who-pick .lbl{align-self:center;font-size:.8rem;color:var(--muted);margin-right:2px}
 nav.tabs button[aria-selected="true"]{color:var(--accent)}
-nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:.7rem;line-height:18px;margin-left:4px}
+nav.tabs button{position:relative}
+nav.tabs .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:.7rem;line-height:18px;text-align:center}
 
 /* Formulär */
 .addrow{display:flex;gap:8px}
-.field{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.field{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:16px}
+.sheet .field{width:100%}
 .field:focus{outline:2px solid var(--accent);outline-offset:-1px}
 select.field{flex:0 0 auto;max-width:42%}
-.btn{border:0;border-radius:var(--r);padding:12px 16px;font-weight:700;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
+.btn{border:0;border-radius:var(--r);padding:12px 16px;min-height:44px;font-weight:700;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
 .btn.ghost{background:var(--sunk);color:var(--ink)}
-.btn.small{padding:7px 12px;font-size:.88rem}
+.btn.small{padding:8px 13px;font-size:.88rem;min-height:38px}
 .btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
 .btn:disabled{opacity:.5;cursor:default}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -87,7 +89,12 @@ select.field{flex:0 0 auto;max-width:42%}
 
 .chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.88rem;color:var(--ink)}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;font-size:.92rem;color:var(--ink);min-height:40px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips.wrapchips{flex-wrap:wrap;overflow:visible;padding-top:0}
+.addbig{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;font-size:1.02rem;border-radius:14px}
+.addbig svg{width:20px;height:20px}
+.chiphead{font:600 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:16px 2px 0}
 .chip:active{background:var(--accent-soft)}
 
 /* Handlingslista */
@@ -96,7 +103,7 @@ select.field{flex:0 0 auto;max-width:42%}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .item{display:flex;align-items:center;gap:12px;padding:12px 10px 12px 12px;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
-.tick{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);background:transparent;display:grid;place-items:center;padding:0}
+.tick{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:2px solid var(--accent);background:transparent;display:grid;place-items:center;padding:0}
 .tick svg{width:15px;height:15px;opacity:0}
 .item.done .tick{background:var(--done);border-color:var(--done)}
 .item.done .tick svg{opacity:1;color:var(--surface)}
@@ -104,7 +111,7 @@ select.field{flex:0 0 auto;max-width:42%}
 .item .name{font-weight:600;overflow-wrap:anywhere}
 .item .meta{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
 .item.done .name{text-decoration:line-through;color:var(--done);font-weight:500}
-.x{flex:0 0 auto;border:0;background:none;color:var(--muted);width:32px;height:32px;border-radius:8px;font-size:1.2rem;line-height:1}
+.x{flex:0 0 auto;border:0;background:none;color:var(--muted);width:44px;height:44px;margin:-6px -6px -6px 0;border-radius:10px;font-size:1.35rem;line-height:1}
 .x:hover{background:var(--sunk)}
 .empty{text-align:center;color:var(--muted);padding:34px 16px;border:1px dashed var(--line);border-radius:var(--r);margin-top:18px}
 .empty strong{display:block;color:var(--ink);font:700 1.1rem var(--display);margin-bottom:4px}
@@ -113,9 +120,9 @@ select.field{flex:0 0 auto;max-width:42%}
 /* Veckomeny */
 .weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .weeknav .lbl{font-weight:700;text-align:center;flex:1}
-.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:40px;height:40px;display:grid;place-items:center}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:44px;height:44px;display:grid;place-items:center}
 .iconbtn svg{width:20px;height:20px}
-.day{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:12px;border-top:1px solid var(--line)}
+.day{display:grid;grid-template-columns:58px 1fr;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
 .day:first-child{border-top:0}
 .day.today{background:var(--accent-soft)}
 .dlabel{display:flex;flex-direction:column;line-height:1.1}
@@ -124,21 +131,30 @@ select.field{flex:0 0 auto;max-width:42%}
 .meals{display:flex;flex-direction:column;gap:6px;min-width:0}
 .meal{display:flex;align-items:center;gap:8px;min-width:0}
 .meal .k{flex:0 0 52px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.slot{flex:1;min-width:0;text-align:left;border:1px dashed var(--line);background:transparent;border-radius:10px;padding:8px 10px;color:var(--muted);overflow-wrap:anywhere}
+.slot{width:100%;min-width:0;min-height:46px;text-align:left;border:1px dashed var(--line);background:transparent;border-radius:10px;padding:10px 12px;color:var(--muted);overflow-wrap:anywhere}
 .slot.set{border-style:solid;border-color:transparent;background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
 .slot.rester{background:var(--mark-soft);color:var(--mark-ink);box-shadow:none}
+.slot.out{background:var(--sunk);color:var(--muted);box-shadow:none;font-style:italic}
 .rq{flex:0 0 auto;border:1px solid var(--mark);background:transparent;color:var(--ink);border-radius:999px;padding:6px 10px;font-size:.8rem;font-weight:600}
 .rq[aria-pressed="true"]{background:var(--mark);color:#2b2205}
 
-.panel{margin-top:22px}
-.panel .head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-.ing{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer}
+.buybtn{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:14px;padding:12px 14px;min-height:56px;margin-bottom:12px;background:var(--accent);color:var(--accent-ink)}
+.buybtn.calm{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.buybtn svg{width:24px;height:24px;flex:0 0 auto}
+.buybtn .t{flex:1;min-width:0}
+.buybtn b{display:block;font:700 1.02rem var(--display)}
+.buybtn small{display:block;font-size:.8rem;opacity:.85}
+.bubble{flex:0 0 auto;min-width:28px;height:28px;padding:0 8px;border-radius:14px;background:var(--danger);color:#fff;font-weight:700;font-size:.9rem;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+nav.tabs .badge.alert{background:var(--danger);color:#fff}
+.ing{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-top:1px solid var(--line)}
 .ing:first-child{border-top:0}
-.ing input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
 .ing .t{flex:1;min-width:0}
-.ing .amt{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
+.ing .t b{overflow-wrap:anywhere}
+.ing .amt{font-size:.85rem;color:var(--ink)}
 .ing .why{font-size:.75rem;color:var(--muted)}
-.ing.off .t{opacity:.6}
+.ing .btn{min-height:44px}
+.sheetbar{position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));background:var(--bg);display:flex;gap:8px;padding:12px 0 calc(4px + env(safe-area-inset-bottom,0px));margin-top:12px;border-top:1px solid var(--line)}
+.sheetbar .btn{flex:1;min-height:48px}
 
 /* Rätter */
 .dish{display:flex;align-items:center;gap:10px;padding:12px;border-top:1px solid var(--line);cursor:pointer}
@@ -196,7 +212,7 @@ select.field{flex:0 0 auto;max-width:42%}
 
 /* Ark (bottom sheet) */
 .scrim{position:fixed;inset:0;background:rgba(10,16,13,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--bg);width:100%;max-width:640px;max-height:88%;overflow:auto;border-radius:18px 18px 0 0;
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:88%;max-height:88dvh;overflow:auto;border-radius:18px 18px 0 0;
   padding-block:16px calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
 .sheet h2{margin-bottom:12px}
@@ -225,23 +241,15 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
 
   <!-- HANDLA -->
   <section id="v-shop">
-    <form class="addrow" id="addForm" autocomplete="off">
-      <input class="field" id="addName" placeholder="Vad behöver köpas?" aria-label="Vara" enterkeyhint="done">
-      <select class="field" id="addCat" aria-label="Kategori"></select>
-      <button class="btn" id="addBtn" type="submit">Lägg till</button>
-    </form>
-    <div class="chips" id="quick"></div>
+    <button class="btn addbig" id="addOpen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Lägg till vara</button>
+    <div class="chiphead">Era vanligaste</div>
+    <div class="chips wrapchips" id="quick" style="padding-top:8px"></div>
     <div id="shopList"></div>
   </section>
 
   <!-- STÖRRE KÖP -->
   <section id="v-wish" hidden>
-    <form class="addrow" id="wishForm" autocomplete="off">
-      <input class="field" id="wishName" placeholder="Vad behöver köpas?" aria-label="Sak att köpa" enterkeyhint="done">
-      <input class="field pricein" id="wishPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="Kr" aria-label="Ungefärligt pris i kronor">
-      <button class="btn" type="submit">Lägg till</button>
-    </form>
-    <div class="who-pick" id="wishWho" role="group" aria-label="Vem är det till"></div>
+    <button class="btn addbig" id="wishOpen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Lägg till sak</button>
     <div class="who-pick" id="wishFilter" role="group" aria-label="Visa"></div>
     <div class="total" id="wishTotal" hidden></div>
     <div id="wishList"></div>
@@ -254,21 +262,12 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
       <div class="lbl" id="weekLbl"></div>
       <button class="iconbtn" id="nextW" aria-label="Nästa 7 dagar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
-    <div class="row" style="margin-bottom:10px">
-      <button class="btn ghost small" id="fillRandom">Slumpa tomma middagar</button>
-      <button class="btn ghost small" id="allRester">Rester till alla luncher</button>
-    </div>
+    <button class="buybtn" id="buyOpen" type="button"></button>
     <div id="speed"></div>
     <div class="list" id="days"></div>
     <div class="total" id="weekCost" hidden></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="fillRandom" style="width:100%">Slumpa tomma middagar</button></div>
     <div class="pairs" id="pairs" hidden></div>
-    <div class="panel">
-      <div class="head">
-        <div><h2>Att handla till menyn</h2><div class="sub" id="ingSub"></div></div>
-        <button class="btn" id="ingAdd">Lägg på listan</button>
-      </div>
-      <div id="ingList"></div>
-    </div>
   </section>
 
   <!-- RÄTTER -->
@@ -286,7 +285,7 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
   <div class="in">
     <button role="tab" data-v="shop" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l-1.5 12.5a1 1 0 0 1-1 .9h-9a1 1 0 0 1-1-.9z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span>Handla<span class="badge" id="shopBadge" hidden></span></span></button>
     <button role="tab" data-v="wish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8"/><rect x="2.5" y="7" width="19" height="5" rx="1"/><path d="M12 7v13M12 7c-1.5-3-5-3.5-5-1s5 1 5 1zM12 7c1.5-3 5-3.5 5-1s-5 1-5 1z"/></svg><span>Större köp</span></button>
-    <button role="tab" data-v="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Veckomeny</span></button>
+    <button role="tab" data-v="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Veckomeny<span class="badge alert" id="planBadge" hidden></span></span></button>
     <button role="tab" data-v="dish" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16a8 8 0 0 1-16 0z"/><path d="M12 9V5M8.5 9.5 7 6M15.5 9.5 17 6"/></svg><span>Rätter</span></button>
   </div>
 </nav>
@@ -296,7 +295,7 @@ textarea.field{min-height:180px;resize:vertical;width:100%;line-height:1.5}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { FIREBASE_CONFIG } from "./config.js";
 import { SEED_DISHES, MORE_DISHES } from "./seed.js";
 import { estimateDish, estimateKcal, healthStars, ingredientCost } from "./prices.js";
@@ -365,7 +364,7 @@ const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); retu
 const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
 
 /* ---------- Tillstånd ---------- */
-const S = { items: [], dishes: [], days: {}, weeks: {}, wishes: [], wishWho: "hemmet", wishFilter: "", view: "shop", offset: 0, ingOff: new Set(), ingOn: new Set(), search: "", names: {} };
+const S = { items: [], dishes: [], days: {}, weeks: {}, wishes: [], wishWho: "hemmet", wishFilter: "", view: "shop", offset: 0, search: "", names: {}, meta: {} };
 let db = null, me = null, myName = "", fsRef = null;
 
 function toast(msg){
@@ -392,17 +391,67 @@ function setView(v){
 document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => setView(b.dataset.v)));
 
 /* ---------- Handla ---------- */
-$("#addCat").innerHTML = `<option value="">Kategori (auto)</option>` + CATS.map(([k,n]) => `<option value="${k}">${n}</option>`).join("");
-$("#quick").innerHTML = QUICK.map(q => `<button type="button" class="chip" data-q="${esc(q)}">+ ${esc(q)}</button>`).join("");
-$("#quick").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) addItem(b.dataset.q); });
-$("#addForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const raw = $("#addName").value.trim(); if (!raw) return;
-  // Stöd för "Mjölk, 2 st" -> namn + anteckning
-  const [name, ...rest] = raw.split(",");
-  await addItem(name, rest.join(",").trim(), $("#addCat").value);
-  $("#addName").value = ""; $("#addCat").value = ""; $("#addName").focus();
-});
+// Snabbval: det ni oftast lägger till, fyllt på med vanliga varor tills det finns tolv.
+function quickList(){
+  const counts = (S.meta.freq && S.meta.freq.counts) || {};
+  const top = Object.entries(counts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([k]) => cap(k));
+  const out = [];
+  for (const n of [...top, ...QUICK]){
+    if (out.length >= 12) break;
+    if (!out.some(x => norm(x) === norm(n)) && !openItem(n)) out.push(n);
+  }
+  return out;
+}
+function renderQuick(){
+  $("#quick").innerHTML = quickList().map(q => `<button type="button" class="chip" data-q="${esc(q)}">+ ${esc(q)}</button>`).join("");
+}
+$("#quick").addEventListener("click", async e => { const b = e.target.closest("[data-q]"); if (b && await addItem(b.dataset.q)) toast(`${b.dataset.q} på listan`); });
+function countUse(name){
+  if (!db || !name) return;
+  db.doc("meta/freq").set({ counts: { [norm(name)]: increment(1) } }, { merge: true }).catch(console.error);
+}
+
+// Lägg till vara: ett ark med stora fält. Arket stannar öppet så att man kan lägga till flera i rad.
+function openAdd(){
+  openSheet(`<h2>Lägg till vara</h2>
+    <form class="stack" id="aForm" autocomplete="off">
+      <div><label class="l" for="aName">Vara</label><input class="field" id="aName" placeholder="t.ex. Mjölk" enterkeyhint="next" autocapitalize="sentences"></div>
+      <div class="chips wrapchips" id="aSugg"></div>
+      <div><label class="l" for="aNote">Mängd eller anteckning (valfritt)</label><input class="field" id="aNote" placeholder="t.ex. 2 st, laktosfri" enterkeyhint="done"></div>
+      <div><span class="l">Kategori</span><div class="chips wrapchips" id="aCat" role="group" aria-label="Kategori">${CATS.map(([k, n]) => `<button type="button" class="chip" data-c="${k}" aria-pressed="false">${n}</button>`).join("")}</div></div>
+      <div class="sheetbar"><button type="button" class="btn ghost" id="aDone">Klar</button><button class="btn" type="submit">Lägg till</button></div>
+    </form>`, () => {
+    let picked = "";
+    const name = $("#aName"), note = $("#aNote");
+    const drawCat = () => { const c = picked || guessCat(name.value); for (const b of $("#aCat").children) b.setAttribute("aria-pressed", String(!!name.value.trim() && b.dataset.c === c)); };
+    const drawSugg = () => {
+      const q = norm(name.value);
+      const counts = (S.meta.freq && S.meta.freq.counts) || {};
+      const pool = [...new Set([...Object.keys(counts).sort((a, b) => counts[b] - counts[a]), ...QUICK.map(norm)])];
+      const hits = q ? pool.filter(n => n.startsWith(q) && n !== q).slice(0, 6) : [];
+      $("#aSugg").innerHTML = hits.map(n => `<button type="button" class="chip" data-s="${esc(cap(n))}">${esc(cap(n))}</button>`).join("");
+      $("#aSugg").hidden = !hits.length;
+    };
+    drawCat(); drawSugg();
+    setTimeout(() => name.focus(), 60);
+    name.addEventListener("input", () => { drawCat(); drawSugg(); });
+    name.addEventListener("keydown", e => { if (e.key === "Enter" && name.value.trim()){ e.preventDefault(); note.focus(); } });
+    $("#aSugg").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; name.value = b.dataset.s; drawCat(); drawSugg(); note.focus(); });
+    $("#aCat").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; picked = picked === b.dataset.c ? "" : b.dataset.c; drawCat(); });
+    $("#aDone").addEventListener("click", closeSheet);
+    $("#aForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      // Stöd för "Mjölk, 2 st" direkt i namnfältet.
+      const [n, ...rest] = name.value.split(",");
+      if (!n.trim()) return name.focus();
+      const extra = [rest.join(",").trim(), note.value.trim()].filter(Boolean).join(", ");
+      const cat = picked || guessCat(n);
+      name.value = ""; note.value = ""; picked = ""; drawCat(); drawSugg(); name.focus();
+      if (await addItem(n, extra, cat)) toast(`${cap(n.trim())} på listan`);
+    });
+  });
+}
+$("#addOpen").addEventListener("click", openAdd);
 
 function openItem(name){ return S.items.find(i => !i.done && norm(i.name) === norm(name)); }
 
@@ -413,8 +462,10 @@ async function addItem(name, note = "", cat = "", source = "manuell"){
     if (note && !norm(existing.note).includes(norm(note))){
       await db.doc("items/" + existing.id).update({ note: existing.note ? existing.note + " + " + note : note }).catch(showErr);
     } else if (source === "manuell") toast(`${name} står redan på listan`);
+    if (source === "manuell") countUse(name);
     return false;
   }
+  if (source === "manuell") countUse(name);
   await db.collection("items").add({ name, note: note || "", cat: cat || guessCat(name), done: false,
     createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName, source }).catch(showErr);
   return true;
@@ -452,7 +503,7 @@ function renderShop(){
   const done = S.items.filter(i => i.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0));
   let html = "";
   if (!open.length && !done.length){
-    html = `<div class="empty"><strong>Listan är tom</strong>Skriv in en vara ovan eller tryck på ett snabbval. Allt ni lägger till syns direkt för er båda.</div>`;
+    html = `<div class="empty"><strong>Listan är tom</strong>Tryck på "Lägg till vara" eller på ett snabbval. Allt ni lägger till syns direkt för er båda.</div>`;
   } else if (!open.length){
     html = `<div class="empty"><strong>Allt är handlat</strong>Inget kvar att köpa just nu.</div>`;
   }
@@ -466,6 +517,7 @@ function renderShop(){
   }
   $("#shopList").innerHTML = html;
   const b = $("#shopBadge"); b.hidden = !open.length; b.textContent = open.length;
+  renderQuick();
 }
 
 /* ---------- Större köp ---------- */
@@ -473,21 +525,10 @@ const PEOPLE = [["emanuel","Emanuel"],["sofia","Sofia"],["leah","Leah"],["hemmet
 const PERSON = Object.fromEntries(PEOPLE);
 try { const w = localStorage.getItem("kp-wishwho"); if (PERSON[w]) S.wishWho = w; } catch {}
 function drawWishPickers(){
-  $("#wishWho").innerHTML = `<span class="lbl">Till:</span>` + PEOPLE.map(([k,n]) => `<button type="button" data-who="${k}" aria-pressed="${S.wishWho === k}">${n}</button>`).join("");
   $("#wishFilter").innerHTML = `<span class="lbl">Visa:</span>` + [["","Alla"], ...PEOPLE].map(([k,n]) => `<button type="button" data-f="${k}" aria-pressed="${S.wishFilter === k}">${n}</button>`).join("");
 }
-$("#wishWho").addEventListener("click", e => { const b = e.target.closest("[data-who]"); if (!b) return; S.wishWho = b.dataset.who; try { localStorage.setItem("kp-wishwho", S.wishWho); } catch {} drawWishPickers(); });
 $("#wishFilter").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; S.wishFilter = b.dataset.f; renderWish(); });
-$("#wishForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const raw = $("#wishName").value.trim(); if (!raw || !db) return;
-  const [name, ...rest] = raw.split(",");
-  const price = toPrice($("#wishPrice").value);
-  $("#wishName").value = ""; $("#wishPrice").value = "";
-  await db.collection("wishes").add({ name: cap(name), note: rest.join(",").trim(), who: S.wishWho, price, done: false,
-    createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName }).catch(showErr);
-  $("#wishName").focus();
-});
+$("#wishOpen").addEventListener("click", () => editWish(null));
 $("#wishList").addEventListener("click", async e => {
   if (e.target.closest("#clearWishDone")){
     const done = S.wishes.filter(w => w.done && (!S.wishFilter || w.who === S.wishFilter));
@@ -509,15 +550,19 @@ function wishRow(w){
     <button class="x" aria-label="Ta bort ${esc(w.name)}">×</button></div>`;
 }
 const sumPrice = ws => ws.reduce((a, w) => a + (w.price || 0), 0);
+// w = null betyder ny sak. Arket stannar öppet efter "Lägg till" så att man kan fylla på flera.
 function editWish(w){
-  openSheet(`<h2>Ändra</h2>
+  const isNew = !w;
+  w = w || { name: "", note: "", price: null, who: S.wishFilter || S.wishWho };
+  openSheet(`<h2>${isNew ? "Lägg till sak" : "Ändra"}</h2>
     <form class="stack" id="wForm">
-      <div><label class="l" for="wName">Vad</label><input class="field" style="width:100%" id="wName" value="${esc(w.name)}" required></div>
+      <div><label class="l" for="wName">Vad</label><input class="field" id="wName" value="${esc(w.name)}" placeholder="t.ex. Vinterskor" autocomplete="off" autocapitalize="sentences"${isNew ? "" : " required"}></div>
       <div><label class="l" for="wNote">Anteckning</label><input class="field" style="width:100%" id="wNote" value="${esc(w.note || "")}" placeholder="t.ex. storlek 38"></div>
       <div><label class="l" for="wPrice">Ungefärligt pris (kr)</label><input class="field" style="width:100%" id="wPrice" type="number" inputmode="numeric" min="0" step="1" value="${w.price || ""}" placeholder="t.ex. 800"></div>
       <div><span class="l">Till</span><div class="who-pick" id="wWho" style="margin-top:0">${PEOPLE.map(([k,n]) => `<button type="button" data-who="${k}" aria-pressed="${(w.who || "hemmet") === k}">${n}</button>`).join("")}</div></div>
-      <div class="row" style="justify-content:flex-end"><button type="button" class="btn ghost" id="wCancel">Avbryt</button><button class="btn" type="submit">Spara</button></div>
+      <div class="sheetbar"><button type="button" class="btn ghost" id="wCancel">${isNew ? "Klar" : "Avbryt"}</button><button class="btn" type="submit">${isNew ? "Lägg till" : "Spara"}</button></div>
     </form>`, () => {
+    if (isNew) setTimeout(() => $("#wName").focus(), 60);
     let who = PERSON[w.who] ? w.who : "hemmet";
     $("#wWho").addEventListener("click", e => { const b = e.target.closest("[data-who]"); if (!b) return; who = b.dataset.who; for (const x of $("#wWho").children) x.setAttribute("aria-pressed", String(x.dataset.who === who)); });
     $("#wCancel").addEventListener("click", closeSheet);
@@ -525,7 +570,13 @@ function editWish(w){
       e.preventDefault();
       // Läs fälten innan arket stängs, annars finns de inte längre.
       const upd = { name: cap($("#wName").value), note: $("#wNote").value.trim(), price: toPrice($("#wPrice").value), who };
-      if (!upd.name) return;
+      if (!upd.name) return $("#wName").focus();
+      if (isNew){
+        S.wishWho = who; try { localStorage.setItem("kp-wishwho", who); } catch {}
+        $("#wName").value = ""; $("#wNote").value = ""; $("#wPrice").value = ""; $("#wName").focus();
+        await db.collection("wishes").add({ ...upd, done: false, createdAt: Date.now(), doneAt: null, addedBy: me || null, addedByName: myName }).catch(showErr);
+        return toast(`${upd.name} tillagd för ${PERSON[who]}`);
+      }
       closeSheet();
       await db.doc("wishes/" + w.id).update(upd).catch(showErr);
     });
@@ -537,7 +588,7 @@ function renderWish(){
   const open = vis.filter(w => !w.done).sort((a,b) => a.createdAt - b.createdAt);
   const done = vis.filter(w => w.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0));
   let html = "";
-  if (!open.length && !done.length) html = `<div class="empty"><strong>Inget här än</strong>Välj vem det gäller och skriv in det som behöver köpas, till exempel "Vinterskor, storlek 38".</div>`;
+  if (!open.length && !done.length) html = `<div class="empty"><strong>Inget här än</strong>Tryck på "Lägg till sak" och skriv in det som behöver köpas, till exempel vinterskor till Leah.</div>`;
   else if (!open.length) html = `<div class="empty"><strong>Allt är köpt</strong>Inget kvar på listan just nu.</div>`;
   for (const [k, label] of PEOPLE){
     const g = open.filter(w => (PERSON[w.who] ? w.who : "hemmet") === k);
@@ -557,6 +608,7 @@ const dishById = id => S.dishes.find(d => d.id === id);
 function mealLabel(m){
   if (!m) return "";
   if (m.type === "rester") return "Rester";
+  if (m.type === "out") return "Äta borta";
   if (m.dishId){ const d = dishById(m.dishId); return d ? d.name : (m.text || "Borttagen rätt"); }
   return m.text || "";
 }
@@ -564,7 +616,7 @@ function weekDates(){ const s = addDays(today0(), S.offset*7); return Array.from
 
 async function saveMeal(key, meal, which){
   const cur = S.days[key] || {};
-  const next = { date: key, dinner: cur.dinner || null, lunch: cur.lunch || null };
+  const next = { ...cur, date: key, dinner: cur.dinner || null };
   next[which] = meal;
   S.days[key] = next; render();
   await db.doc("days/" + key).set(next).catch(showErr);
@@ -575,37 +627,25 @@ function renderPlan(){
   const a = ds[0], b = ds[6];
   $("#weekLbl").textContent = `${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
   $("#days").innerHTML = ds.map(d => {
-    const k = keyOf(d), day = S.days[k] || {};
-    const dn = mealLabel(day.dinner), ln = mealLabel(day.lunch), isR = day.lunch && day.lunch.type === "rester";
+    const k = keyOf(d), m = (S.days[k] || {}).dinner, dn = mealLabel(m);
+    const cls = !dn ? "" : m.type === "out" ? " set out" : m.type === "rester" ? " set rester" : " set";
     return `<div class="day${k === tk ? " today" : ""}" data-k="${k}">
       <div class="dlabel"><b>${k === tk ? "Idag" : DAYS[d.getDay()]}</b><span>${d.getDate()} ${MONTHS[d.getMonth()]}</span></div>
-      <div class="meals">
-        <div class="meal"><span class="k">Lunch</span>
-          <button class="slot${ln ? " set" : ""}${isR ? " rester" : ""}" data-w="lunch">${ln ? esc(ln) : "Välj lunch"}</button>
-          <button class="rq" data-r="1" aria-pressed="${isR}">Rester</button></div>
-        <div class="meal"><span class="k">Middag</span>
-          <button class="slot${dn ? " set" : ""}" data-w="dinner">${day.dinner && day.dinner.speed ? `<span class="zap" aria-label="Speed dinner">⚡</span>` : ""}${dn ? esc(dn) : "Välj middag"}</button></div>
-      </div></div>`;
+      <button class="slot${cls}" data-w="dinner">${m && m.speed ? `<span class="zap" aria-label="Speed dinner">⚡</span>` : ""}${dn ? esc(dn) : "Välj middag"}</button>
+    </div>`;
   }).join("");
   renderSpeed();
   renderWeekCost(ds);
   renderPairs();
-  renderIngredients();
+  renderBuyBtn();
 }
 
 $("#days").addEventListener("click", e => {
   const day = e.target.closest("[data-k]"); if (!day) return;
-  const k = day.dataset.k;
-  if (e.target.closest("[data-r]")){
-    const cur = S.days[k] && S.days[k].lunch;
-    saveMeal(k, cur && cur.type === "rester" ? null : { type: "rester" }, "lunch");
-  } else { const s = e.target.closest("[data-w]"); if (s) openPicker(k, s.dataset.w); }
+  if (e.target.closest("[data-w]")) openPicker(day.dataset.k, "dinner");
 });
 $("#prevW").addEventListener("click", () => { S.offset--; renderPlan(); });
 $("#nextW").addEventListener("click", () => { S.offset++; renderPlan(); });
-$("#allRester").addEventListener("click", async () => {
-  for (const d of weekDates()){ const k = keyOf(d); if (!(S.days[k] && S.days[k].lunch)) await saveMeal(k, { type: "rester" }, "lunch"); }
-});
 $("#fillRandom").addEventListener("click", async () => {
   if (!S.dishes.length) return toast("Lägg till rätter först");
   const ds = weekDates().map(keyOf);
@@ -624,14 +664,13 @@ function renderWeekCost(ds){
   let sum = 0, n = 0, missing = 0;
   for (const d of ds){
     const day = S.days[keyOf(d)] || {};
-    for (const m of [day.dinner, day.lunch]){
-      if (!m || !m.dishId) continue;
-      const c = dishCost(dishById(m.dishId)); n++;
-      if (c) sum += c; else missing++;
-    }
+    const m = day.dinner;
+    if (!m || !m.dishId) continue;
+    const c = dishCost(dishById(m.dishId)); n++;
+    if (c) sum += c; else missing++;
   }
   const el = $("#weekCost"); el.hidden = !n;
-  el.innerHTML = `<span>Uppskattad matkostnad för ${n} ${n === 1 ? "måltid" : "måltider"}${missing ? ` · ${missing} utan pris` : ""}</span><b>≈ ${kr(sum)}</b>`;
+  el.innerHTML = `<span>Uppskattad matkostnad för ${n} ${n === 1 ? "middag" : "middagar"}${missing ? ` · ${missing} utan pris` : ""}</span><b>≈ ${kr(sum)}</b>`;
 }
 
 /* Speed dinner: en reservrätt som alltid ska vara vald. Används den måste en ny väljas. */
@@ -697,7 +736,7 @@ function weekPairs(){
   const chosen = new Set(), keys = new Map();
   for (const d of weekDates()){
     const day = S.days[keyOf(d)] || {};
-    for (const m of [day.dinner, day.lunch]) if (m && m.dishId) chosen.add(m.dishId);
+    if (day.dinner && day.dinner.dishId) chosen.add(day.dinner.dishId);
   }
   for (const id of chosen){ const d = dishById(id); if (d) for (const k of dishKeys(d)) keys.set(k, canonical(k).name); }
   if (!keys.size) return new Map();
@@ -729,19 +768,22 @@ $("#pairs").addEventListener("click", e => {
   toast(`${dishById(b.dataset.pair).name} lagd på ${DAYS[d.getDay()].toLowerCase()}`);
 });
 
-/* Ingredienser för veckan */
-function weekIngredients(){
+/* Att handla till veckan.
+   Varje middag minns vilka av sina varor som redan är hanterade (tillagda eller bortrensade).
+   En ny eller bytt middag har inga hanterade varor, så dess varor dyker upp som nya förslag. */
+function weekIngredients(dates = weekDates()){
   const map = new Map();
-  for (const d of weekDates()){
-    const day = S.days[keyOf(d)] || {};
-    for (const m of [day.dinner, day.lunch]){
-      if (!m || !m.dishId) continue;
-      const dish = dishById(m.dishId); if (!dish) continue;
-      for (const ing of dish.ingredients || []){
-        const c = canonical(ing.n); if (!c.key) continue;
-        if (!map.has(c.key)) map.set(c.key, { key: c.key, name: c.name, amts: [], dishes: new Set() });
-        const e = map.get(c.key); if (ing.m) e.amts.push(ing.m); e.dishes.add(dish.name);
-      }
+  for (const d of dates){
+    const k = keyOf(d), m = (S.days[k] || {}).dinner;
+    // Speed dinner-varorna lades på listan när rätten valdes som reserv.
+    if (!m || !m.dishId || m.speed) continue;
+    const dish = dishById(m.dishId); if (!dish) continue;
+    const done = m.handled || {};
+    for (const ing of dish.ingredients || []){
+      const c = canonical(ing.n);
+      if (!c.key || isStaple(c.name) || isStaple(ing.n) || done[c.key]) continue;
+      if (!map.has(c.key)) map.set(c.key, { key: c.key, name: c.name, amts: [], dishes: new Set(), days: new Set() });
+      const e = map.get(c.key); if (ing.m) e.amts.push(ing.m); e.dishes.add(dish.name); e.days.add(k);
     }
   }
   // Summera samma vara: 400 g + 400 g blir 800 g.
@@ -751,89 +793,113 @@ function weekIngredients(){
     return ca - cb || a.name.localeCompare(b.name, "sv");
   });
 }
-const weekId = () => keyOf(weekDates()[0]);
-const haveSet = () => new Set((S.weeks[weekId()] && S.weeks[weekId()].have) || []);
-function ingChecked(e){
-  if (haveSet().has(e.key)) return false;
-  if (S.ingOff.has(e.key)) return false;
-  if (S.ingOn.has(e.key)) return true;
-  return !isStaple(e.name) && !openItem(e.name);
-}
-function renderIngredients(){
-  const list = weekIngredients();
-  const dishesCount = new Set(weekDates().flatMap(d => { const x = S.days[keyOf(d)] || {}; return [x.dinner?.dishId, x.lunch?.dishId]; }).filter(Boolean)).size;
-  if (!list.length){
-    $("#ingSub").textContent = "";
-    $("#ingList").innerHTML = `<div class="empty" style="margin-top:0"><strong>Inga rätter valda än</strong>Välj middagar ovan så samlas allt ni behöver här.</div>`;
-    $("#ingAdd").disabled = true; return;
+// Förslag = varor som inte är hanterade och inte redan står på listan.
+const suggestions = dates => weekIngredients(dates).filter(e => !openItem(e.name));
+const thisWeek = () => Array.from({length:7}, (_, i) => addDays(today0(), i));
+
+// Markera varorna som hanterade på de middagar de kommer ifrån.
+async function markHandled(entries){
+  const byDay = new Map();
+  for (const e of entries) for (const k of e.days){ if (!byDay.has(k)) byDay.set(k, []); byDay.get(k).push(e.key); }
+  const writes = [];
+  for (const [k, keys] of byDay){
+    const cur = S.days[k]; if (!cur || !cur.dinner) continue;
+    const handled = { ...(cur.dinner.handled || {}) };
+    for (const key of keys) handled[key] = true;
+    S.days[k] = { ...cur, dinner: { ...cur.dinner, handled } };
+    writes.push(db.doc("days/" + k).set(S.days[k]));
   }
-  const n = list.filter(ingChecked).length, have = haveSet();
-  const got = list.filter(e => have.has(e.key)).length;
-  $("#ingSub").textContent = `${list.length} varor från ${dishesCount} rätter · ${n} valda${got ? ` · ${got} har ni redan` : ""}`;
-  $("#ingAdd").disabled = !n; $("#ingAdd").textContent = n ? `Lägg ${n} på listan` : "Lägg på listan";
-  const row = e => {
-    const on = ingChecked(e), already = openItem(e.name), st = isStaple(e.name), h = have.has(e.key);
-    return `<label class="ing${on ? "" : " off"}${h ? " got" : ""}"><input type="checkbox" data-ing="${esc(e.key)}" ${on ? "checked" : ""}${h ? " disabled" : ""}>
-      <div class="t"><div><b>${esc(e.name)}</b>${h ? `<span class="tag">har redan</span>` : already ? `<span class="tag">på listan</span>` : st ? `<span class="tag">basvara</span>` : ""}</div>
-      ${e.total ? `<div class="amt">${esc(e.total)}</div>` : ""}
-      <div class="why">${esc([...e.dishes].join(", "))}</div></div>
-      <button type="button" class="have" data-have="${esc(e.key)}" aria-pressed="${h}">${h ? "Ångra" : "Har redan"}</button></label>`;
-  };
-  // Det ni redan har samlas längst ner i en ihopfälld rad.
-  const need = list.filter(e => !have.has(e.key)), gotList = list.filter(e => have.has(e.key));
-  $("#ingList").innerHTML = (need.length ? `<div class="list">${need.map(row).join("")}</div>` : `<div class="empty" style="margin-top:0">Ni har allt som behövs för veckans rätter.</div>`) +
-    (gotList.length ? `<details class="havebox"${S.haveOpen ? " open" : ""}><summary>Har redan hemma (${gotList.length})</summary><div class="list">${gotList.map(row).join("")}</div></details>` : "");
-  const det = $("#ingList .havebox"); if (det) det.addEventListener("toggle", () => { S.haveOpen = det.open; });
-}
-$("#ingList").addEventListener("click", async e => {
-  const b = e.target.closest("[data-have]"); if (!b) return;
-  e.preventDefault(); // klicket ska inte bocka i rutan i samma rad
-  const have = haveSet(), k = b.dataset.have, wk = weekId();
-  if (have.has(k)) have.delete(k); else have.add(k);
-  S.weeks[wk] = { have: [...have] }; renderIngredients();
-  await db.doc("weeks/" + wk).set({ have: [...have], updatedAt: Date.now() }).catch(showErr);
-});
-$("#ingList").addEventListener("change", e => {
-  const k = e.target.dataset.ing; if (!k) return;
-  if (e.target.checked){ S.ingOff.delete(k); S.ingOn.add(k); } else { S.ingOn.delete(k); S.ingOff.add(k); }
-  renderIngredients();
-});
-$("#ingAdd").addEventListener("click", async () => {
-  const list = weekIngredients().filter(ingChecked);
-  $("#ingAdd").disabled = true;
-  let added = 0;
-  for (const e of list){ if (await addItem(e.name, e.total, "", "meny")) added++; }
-  S.ingOn.clear(); S.ingOff.clear();
-  toast(`${added} nya varor på handlingslistan`);
   render();
-});
+  await Promise.all(writes).catch(showErr);
+}
+
+function renderBuyBtn(){
+  const list = suggestions(), n = list.length;
+  const any = weekDates().some(d => { const m = (S.days[keyOf(d)] || {}).dinner; return m && m.dishId; });
+  const b = $("#buyOpen");
+  b.className = "buybtn" + (n ? "" : " calm");
+  b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14l-1.5 12.5a1 1 0 0 1-1 .9h-9a1 1 0 0 1-1-.9z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+    <span class="t"><b>Att handla till veckan</b><small>${n ? `${n} ${n === 1 ? "vara" : "varor"} föreslås. Välj vad som ska på listan.` : any ? "Allt är hanterat. Nya förslag dyker upp när ni väljer fler middagar." : "Välj middagar så föreslås det ni behöver köpa."}</small></span>
+    ${n ? `<span class="bubble" aria-label="${n} förslag">${n}</span>` : ""}`;
+}
+function renderPlanBadge(){
+  const n = suggestions(thisWeek()).length, b = $("#planBadge");
+  b.hidden = !n; b.textContent = n;
+}
+$("#buyOpen").addEventListener("click", openBuy);
+
+function openBuy(){
+  openSheet(`<h2>Att handla till veckan</h2>
+    <p class="hint" style="margin:-4px 0 12px">Tryck "Lägg till" på det ni behöver köpa. Resten tar ni bort med "Rensa resten".</p>
+    <div id="bList"></div>
+    <div class="sheetbar" id="bBar"></div>`, () => {
+    S.sheetDraw = () => {
+      const list = suggestions();
+      if (!list.length){
+        $("#bList").innerHTML = `<div class="empty" style="margin-top:0"><strong>Inga fler förslag</strong>När ni väljer nya middagar dyker deras varor upp här.</div>`;
+        $("#bBar").innerHTML = `<button class="btn" type="button" data-b="close">Klar</button>`;
+        return;
+      }
+      $("#bList").innerHTML = `<div class="list">` + list.map(e => `<div class="ing">
+        <div class="t"><b>${esc(e.name)}</b>${e.total ? `<div class="amt">${esc(e.total)}</div>` : ""}<div class="why">${esc([...e.dishes].join(", "))}</div></div>
+        <button class="btn small" type="button" data-add="${esc(e.key)}">Lägg till</button></div>`).join("") + `</div>`;
+      $("#bBar").innerHTML = `<button class="btn ghost" type="button" data-b="clear">Rensa resten (${list.length})</button><button class="btn" type="button" data-b="all">Lägg till alla</button>`;
+    };
+    S.sheetDraw();
+    $("#bList").parentElement.addEventListener("click", async e => {
+      const a = e.target.closest("[data-add]");
+      if (a){
+        const it = suggestions().find(x => x.key === a.dataset.add); if (!it) return;
+        a.disabled = true;
+        await addItem(it.name, it.total, "", "meny");
+        toast(`${it.name} på listan`);
+        return markHandled([it]);
+      }
+      const b = e.target.closest("[data-b]"); if (!b) return;
+      if (b.dataset.b === "close") return closeSheet();
+      const list = suggestions();
+      if (b.dataset.b === "all"){
+        b.disabled = true; let n = 0;
+        for (const it of list) if (await addItem(it.name, it.total, "", "meny")) n++;
+        await markHandled(weekIngredients());
+        toast(`${n} varor på handlingslistan`);
+      }
+      if (b.dataset.b === "clear"){
+        await markHandled(weekIngredients());
+        toast(`Rensade ${list.length} förslag`);
+      }
+      closeSheet();
+    });
+  });
+}
 
 /* ---------- Ark ---------- */
 // locked = arket går inte att stänga genom att trycka utanför eller med Esc.
 let sheetLocked = false;
 function openSheet(html, onMount, locked = false){
   const host = $("#sheetHost");
-  sheetLocked = locked;
+  sheetLocked = locked; S.sheetDraw = null;
   host.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
   const scrim = host.firstElementChild;
   scrim.addEventListener("click", e => { if (e.target === scrim && !sheetLocked) closeSheet(); });
   onMount && onMount(scrim.firstElementChild);
 }
-function closeSheet(){ sheetLocked = false; $("#sheetHost").innerHTML = ""; }
+function closeSheet(){ sheetLocked = false; S.sheetDraw = null; $("#sheetHost").innerHTML = ""; }
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetLocked) closeSheet(); });
 
 function openPicker(k, which){
   const d = new Date(k + "T12:00:00");
-  const label = `${which === "dinner" ? "Middag" : "Lunch"} ${DAYS[d.getDay()].toLowerCase()} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  const label = `Middag ${DAYS[d.getDay()].toLowerCase()} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
   openSheet(`<h2>${label}</h2>
     <div class="stack">
       <input class="field" id="pkSearch" placeholder="Sök bland ${S.dishes.length} rätter eller skriv något eget" autocomplete="off">
       <div class="row">
-        ${which === "lunch" ? `<button class="btn small" data-pk="rester">Rester</button>` : ""}
+        <button class="btn small" data-pk="out">Äta borta</button>
+        <button class="btn ghost small" data-pk="rester">Rester</button>
         <button class="btn ghost small" data-pk="text">Använd det jag skrev</button>
         <button class="btn ghost small" data-pk="clear">Töm</button>
       </div>
-      ${which === "dinner" && speedDish() ? `<button type="button" class="pkspeed" data-pk="speed"><span aria-hidden="true">⚡</span><span><b>Använd speed dinner: ${esc(speedDish().name)}</b><small>Sedan väljer ni en ny reserv</small></span></button>` : ""}
+      ${speedDish() ? `<button type="button" class="pkspeed" data-pk="speed"><span aria-hidden="true">⚡</span><span><b>Använd speed dinner: ${esc(speedDish().name)}</b><small>Sedan väljer ni en ny reserv</small></span></button>` : ""}
       <div class="list" id="pkList"></div>
     </div>`, sheet => {
     const draw = () => {
@@ -853,6 +919,7 @@ function openPicker(k, which){
       const b = e.target.closest("[data-pk]"); if (!b) return;
       if (b.dataset.pk === "speed") return useSpeed(k);
       if (b.dataset.pk === "rester") saveMeal(k, { type: "rester" }, which);
+      if (b.dataset.pk === "out") saveMeal(k, { type: "out" }, which);
       if (b.dataset.pk === "clear") saveMeal(k, null, which);
       if (b.dataset.pk === "text"){ const t = $("#pkSearch").value.trim(); if (!t) return $("#pkSearch").focus(); saveMeal(k, { type: "text", text: cap(t) }, which); }
       closeSheet();
@@ -967,6 +1034,8 @@ function editDish(id){
 function render(){
   setTimeout(ensureSpeed);
   renderShop();
+  renderPlanBadge();
+  if (S.sheetDraw) S.sheetDraw();
   if (S.view === "wish") renderWish();
   if (S.view === "plan") renderPlan();
   if (S.view === "dish") renderDishes();
@@ -981,7 +1050,7 @@ function makeDb(fs){
   const wrap = s => ({ docs: s.docs.map(d => ({ id: d.id, data: () => d.data() })) });
   return {
     collection: p => ({ add: d => addDoc(collection(fs, p), d), onSnapshot: (n, e) => onSnapshot(collection(fs, p), s => n(wrap(s)), e) }),
-    doc: p => ({ set: d => setDoc(doc(fs, p), d), update: d => updateDoc(doc(fs, p), d), delete: () => deleteDoc(doc(fs, p)) }),
+    doc: p => ({ set: (d, o) => o ? setDoc(doc(fs, p), d, o) : setDoc(doc(fs, p), d), update: d => updateDoc(doc(fs, p), d), delete: () => deleteDoc(doc(fs, p)) }),
   };
 }
 

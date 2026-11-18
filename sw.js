@@ -1,5 +1,5 @@
 // Gör att appen startar även utan nät. Listan själv cachas av Firebase.
-const CACHE = "koksplanen-v10";
+const CACHE = "koksplanen-v11";
 const SHELL = ["./", "index.html", "config.js", "seed.js", "prices.js", "ingredients.js", "manifest.webmanifest", "icons/icon-192.png"];
 
 self.addEventListener("install", e => {
